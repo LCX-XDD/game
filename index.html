@@ -1,27 +1,27 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<!-- 修复ICO图标：使用浏览器兼容的PNG格式 -->
 <link rel="icon" href="https://cdn-icons-png.flaticon.com/16/2534/2534026.png" type="image/png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>数字猜猜乐</title>
-  <!-- 引入Tailwind CSS -->
+  <!-- 引入外部资源 -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- 引入Font Awesome -->
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.13.0/dist/av-min.js"></script>
   
-  <!-- 自定义配置 -->
+  <!-- Tailwind 配置 -->
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            primary: '#6366F1', // 主色调：靛蓝色
-            secondary: '#EC4899', // 辅助色：粉色
-            accent: '#10B981', // 强调色：绿色
-            neutral: '#1F2937', // 中性色：深灰
-            danger: '#EF4444', // 危险色：红色
+            primary: '#6366F1',
+            secondary: '#EC4899',
+            accent: '#10B981',
+            neutral: '#1F2937',
+            danger: '#EF4444',
+            warning: '#F59E0B',
           },
           fontFamily: {
             inter: ['Inter', 'system-ui', 'sans-serif'],
@@ -29,16 +29,11 @@
           animation: {
             'bounce-slow': 'bounce 2s infinite',
             'float': 'float 3s ease-in-out infinite',
-            'fall': 'fall linear infinite',
           },
           keyframes: {
             float: {
               '0%, 100%': { transform: 'translateY(0)' },
               '50%': { transform: 'translateY(-10px)' },
-            },
-            fall: {
-              '0%': { transform: 'translateY(-10px) rotate(0deg)' },
-              '100%': { transform: 'translateY(100vh) rotate(360deg)' },
             }
           }
         },
@@ -46,7 +41,7 @@
     }
   </script>
   
-  <!-- 自定义工具类 -->
+  <!-- 自定义工具类和样式 -->
   <style type="text/tailwindcss">
     @layer utilities {
       .content-auto {
@@ -60,112 +55,71 @@
         backdrop-filter: blur(12px);
         background-color: rgba(30, 41, 59, 0.85);
       }
-      .text-shadow {
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
       .card-shadow {
         box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.08), 0 8px 10px -6px rgba(99, 102, 241, 0.08);
       }
       .card-shadow-dark {
-        box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.15), 0 8px 10px -6px rgba(99, 102, 241, 0.15);
-      }
-      .snowflake {
-        position: absolute;
-        color: #e0e7ff;
-        font-size: clamp(8px, 2vw, 16px);
-        pointer-events: none;
-        animation: fall linear infinite;
-        opacity: 0.8;
-      }
-      .snowflake-dark {
-        color: #a5b4fc;
-        opacity: 0.6;
-      }
-      /* 深色模式全局文本/背景适配 */
-      .dark-theme .text-neutral {
-        color: #f8fafc !important;
-      }
-      .dark-theme .text-gray-600 {
-        color: #cbd5e1 !important;
-      }
-      .dark-theme .text-gray-500 {
-        color: #94a3b8 !important;
-      }
-      .dark-theme .text-gray-400 {
-        color: #94a3b8 !important;
-      }
-      .dark-theme .border-gray-200 {
-        border-color: #475569 !important;
-      }
-      .dark-theme .bg-white\/60 {
-        background-color: rgba(30, 41, 59, 0.6) !important;
-      }
-      .dark-theme .bg-gray-100\/70 {
-        background-color: rgba(51, 65, 85, 0.7) !important;
-      }
-      .dark-theme .bg-gray-200\/70 {
-        background-color: rgba(71, 85, 105, 0.7) !important;
-      }
-      /* 顶部标题和底部区域深色模式适配 */
-      .dark-theme .header-title {
-        color: #f8fafc !important;
-      }
-      .dark-theme .footer-text {
-        color: #94a3b8 !important;
-      }
-      /* 难度开关样式 */
-      .difficulty-switch {
-        position: relative;
-        display: inline-block;
-        width: 56px;
-        height: 28px;
-      }
-      .difficulty-switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-      }
-      .difficulty-slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #e5e7eb;
-        transition: .3s;
-        border-radius: 28px;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-      }
-      .difficulty-slider:before {
-        position: absolute;
-        content: "";
-        height: 22px;
-        width: 22px;
-        left: 3px;
-        bottom: 3px;
-        background-color: white;
-        transition: .3s;
-        border-radius: 50%;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-      }
-      input:checked + .difficulty-slider {
-        background-color: #EF4444;
-      }
-      input:checked + .difficulty-slider:before {
-        transform: translateX(28px);
-      }
-      .dark-theme .difficulty-slider {
-        background-color: #4b5563;
-      }
-      .dark-theme input:checked + .difficulty-slider {
-        background-color: #f87171;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
       }
     }
   </style>
   
   <style>
-    /* 全局样式 - 白天模式默认 */
+/* 战绩记录样式调整 */
+#user-records {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+.dark-theme #user-records {
+  background-color: rgba(55, 65, 81, 0.3);
+  border-color: rgba(75, 85, 99, 0.5);
+}
+
+.record-item {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.dark-theme .record-item {
+  background-color: rgba(31, 41, 55, 0.8);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.record-item:hover {
+  transform: translateY(-2px);
+}
+
+.record-item .record-date {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.dark-theme .record-item .record-date {
+  color: #9ca3af;
+}
+
+.record-item .record-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+}
+
+.record-item .record-success {
+  color: #10b981; /* 胜利用绿色 */
+}
+
+.record-item .record-fail {
+  color: #ef4444; /* 失败用红色 */
+}
+    /* 基础样式 */
     body {
       background: #ffffff;
       min-height: 100vh;
@@ -174,130 +128,316 @@
       transition: background-color 0.5s ease;
     }
     
-    /* 深色模式背景 */
     body.dark-theme {
       background: #1a202c;
     }
     
-    /* 雪花背景容器 */
-    #snow-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1;
-    }
-    
-    /* 输入框聚焦效果 */
-    input[type="number"]:focus,
-    input[type="password"]:focus {
+    /* 输入框样式 */
+    input:focus {
       outline: none;
       box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+    
+    /* 动画效果 */
+    .number-animation {
+      transition: all 0.3s ease;
+    }
+    
+    .result-animation {
+      animation: fadeIn 0.5s ease forwards;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .theme-transition {
+      transition: all 0.5s ease;
+    }
+    
+    .password-modal-enter {
+      animation: modalEnter 0.3s ease forwards;
+    }
+    
+    @keyframes modalEnter {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    .remaining-count-area {
+      transition: color 0.3s ease, background-color 0.3s ease;
+    }
+    
+    /* 深色模式适配 - 修复图标颜色 */
+    .dark-theme .text-gray-700 { color: #e2e8f0 !important; }
+    .dark-theme .text-gray-600 { color: #cbd5e1 !important; }
+    .dark-theme .text-gray-500 { color: #94a3b8 !important; }
+    .dark-theme .text-gray-400 { color: #94a3b8 !important; }
+    .dark-theme .border-gray-200 { border-color: #475569 !important; }
+    .dark-theme .bg-white\/60 { background-color: rgba(30, 41, 59, 0.6) !important; }
+    .dark-theme .bg-gray-100\/70 { background-color: rgba(51, 65, 85, 0.7) !important; }
+    .dark-theme .bg-gray-200\/70 { background-color: rgba(71, 85, 105, 0.7) !important; }
+    .dark-theme .header-title { color: #f8fafc !important; }
+    .dark-theme .footer-text { color: #94a3b8 !important; }
+    .dark-theme .fa { color: #e2e8f0 !important; } /* 深色模式下所有图标颜色 */
+    
+    /* 难度开关样式 */
+    .difficulty-switch {
+      position: relative;
+      display: inline-block;
+      width: 56px;
+      height: 28px;
+    }
+    
+    .difficulty-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .difficulty-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #e5e7eb;
+      transition: .3s;
+      border-radius: 28px;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .difficulty-slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+    
+    input:checked + .difficulty-slider {
+      background-color: #EF4444;
+    }
+    
+    input:checked + .difficulty-slider:before {
+      transform: translateX(28px);
+    }
+    
+    .dark-theme .difficulty-slider {
+      background-color: #4b5563;
+    }
+    
+    .dark-theme input:checked + .difficulty-slider {
+      background-color: #f87171;
     }
     
     /* 平滑滚动 */
     html {
       scroll-behavior: smooth;
     }
-    
-    /* 数字动画 */
-    .number-animation {
-      transition: all 0.3s ease;
-    }
-    
-    /* 结果提示动画 */
-    .result-animation {
-      animation: fadeIn 0.5s ease forwards;
-    }
-    
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    
-    /* 雪花飘落动画 */
-    @keyframes fall {
-      0% {
-        transform: translateY(-10px) rotate(0deg);
-        opacity: 0.8;
-      }
-      100% {
-        transform: translateY(100vh) rotate(360deg);
-        opacity: 0;
-      }
-    }
-    
-    /* 主题切换过渡效果 */
-    .theme-transition {
-      transition: all 0.5s ease;
-    }
-
-    /* 密码弹窗动画 */
-    .password-modal-enter {
-      animation: modalEnter 0.3s ease forwards;
-    }
-    
-    @keyframes modalEnter {
-      from {
-        opacity: 0;
-        transform: scale(0.9);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-    
-    /* 剩余次数区域颜色过渡 */
-    .remaining-count-area {
-      transition: color 0.3s ease, background-color 0.3s ease;
-    }
   </style>
 </head>
 <body class="font-inter text-neutral min-h-screen flex flex-col theme-transition">
-  <!-- 雪花背景容器 -->
-  <div id="snow-container"></div>
-  
-  <!-- 密码验证弹窗 -->
-  <div id="password-modal" class="fixed inset-0 bg-black/30 flex items-center justify-center z-50 backdrop-blur-sm">
-    <div class="glass-effect rounded-2xl p-8 max-w-md w-full mx-4 password-modal-enter">
-      <div class="text-center mb-6">
-        <div class="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-          <i class="fa fa-lock text-2xl text-primary"></i>
+  <!-- 登录/注册弹窗 -->
+  <div id="auth-modal" class="fixed inset-0 bg-black/20 flex items-center justify-center z-50 backdrop-blur-sm">
+    <div class="glass-effect rounded-2xl p-8 max-w-md w-full mx-4 password-modal-enter card-shadow">
+      <!-- 登录表单 -->
+      <div id="login-form" class="auth-form">
+        <div class="text-center mb-6">
+          <div class="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fa fa-user-circle text-2xl text-primary"></i>
+          </div>
+          <h3 class="text-xl font-bold text-neutral mb-2 theme-transition">用户登录</h3>
+          <p class="text-gray-600 text-sm theme-transition">欢迎回来，请登录您的账号</p>
         </div>
-        <h3 class="text-xl font-bold text-neutral mb-2">请输入访问密码</h3>
-        <p class="text-gray-600 text-sm">密码错误10次将触发5分钟冷静期</p>
+        
+        <div class="space-y-4 mb-6">
+          <div>
+            <input 
+              type="text" 
+              id="login-username" 
+              placeholder="请输入用户名"
+              class="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white/60 text-neutral focus:border-primary transition-all duration-200 theme-transition"
+              required
+            >
+          </div>
+          <div>
+            <input 
+              type="password" 
+              id="login-password" 
+              placeholder="请输入密码"
+              class="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white/60 text-neutral focus:border-primary transition-all duration-200 theme-transition"
+              required
+            >
+          </div>
+          <div>
+            <p id="login-error" class="text-red-500 text-sm text-center hidden theme-transition"></p>
+          </div>
+        </div>
+        
+        <button 
+          id="login-btn" 
+          class="w-full py-3 bg-primary hover:bg-primary/90 text-white px-6 rounded-lg transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-primary/30 theme-transition"
+        >
+          <i class="fa fa-sign-in mr-2"></i>
+          <span>登录</span>
+        </button>
+        
+        <div class="text-center mt-4 text-sm text-gray-600 theme-transition">
+          还没有账号？<a href="javascript:;" id="switch-to-register" class="text-primary hover:underline">立即注册</a>
+        </div>
       </div>
       
-      <div class="mb-4">
+      <!-- 注册表单 -->
+      <div id="register-form" class="auth-form hidden">
+        <div class="text-center mb-6">
+          <div class="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fa fa-user-plus text-2xl text-secondary"></i>
+          </div>
+          <h3 class="text-xl font-bold text-neutral mb-2 theme-transition">用户注册</h3>
+          <p class="text-gray-600 text-sm theme-transition">创建新账号，开始游戏之旅</p>
+        </div>
+        
+        <div class="space-y-4 mb-6">
+          <div>
+            <input 
+              type="text" 
+              id="register-username" 
+              placeholder="请设置用户名"
+              class="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white/60 text-neutral focus:border-primary transition-all duration-200 theme-transition"
+              required
+            >
+          </div>
+          <div>
+            <input 
+              type="password" 
+              id="register-password" 
+              placeholder="请设置密码（至少6位）"
+              class="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white/60 text-neutral focus:border-primary transition-all duration-200 theme-transition"
+              minlength="6"
+              required
+            >
+          </div>
+          <div>
+            <input 
+              type="password" 
+              id="register-confirm-password" 
+              placeholder="请确认密码"
+              class="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white/60 text-neutral focus:border-primary transition-all duration-200 theme-transition"
+              required
+            >
+          </div>
+          <div>
+            <p id="register-error" class="text-red-500 text-sm text-center hidden theme-transition"></p>
+            <p id="register-success" class="text-green-500 text-sm text-center hidden theme-transition"></p>
+          </div>
+        </div>
+        
+        <button 
+          id="register-btn" 
+          class="w-full py-3 bg-secondary hover:bg-secondary/90 text-white px-6 rounded-lg transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-secondary/30 theme-transition"
+        >
+          <i class="fa fa-user-plus mr-2"></i>
+          <span>注册</span>
+        </button>
+        
+        <div class="text-center mt-4 text-sm text-gray-600 theme-transition">
+          已有账号？<a href="javascript:;" id="switch-to-login" class="text-primary hover:underline">返回登录</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 修改密码弹窗 -->
+  <div id="change-password-modal" class="fixed inset-0 bg-black/20 flex items-center justify-center z-50 hidden backdrop-blur-sm theme-transition">
+    <div class="glass-effect rounded-2xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="change-password-content">
+      <div class="flex justify-between items-start mb-4">
+        <h3 class="text-xl font-bold text-neutral flex items-center gap-2 theme-transition">
+          <i class="fa fa-key text-primary"></i>
+          修改密码
+        </h3>
+        <button id="close-password-modal" class="text-gray-400 hover:text-gray-600 transition-colors theme-transition">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      <input type="hidden" id="target-user-id">
+      <div class="space-y-4 mb-6">
+        <div>
+          <input 
+            type="password" 
+            id="new-password" 
+            placeholder="请输入新密码（至少6位）"
+            class="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white/60 text-neutral focus:border-primary transition-all duration-200 theme-transition"
+            minlength="6"
+            required
+          >
+        </div>
+        <div>
+          <input 
+            type="password" 
+            id="confirm-new-password" 
+            placeholder="请确认新密码"
+            class="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white/60 text-neutral focus:border-primary transition-all duration-200 theme-transition"
+            required
+          >
+        </div>
+        <div>
+          <p id="password-error" class="text-red-500 text-sm text-center hidden theme-transition"></p>
+        </div>
+      </div>
+      <button id="save-password-btn" class="w-full py-3 bg-primary hover:bg-primary/90 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-primary/30 theme-transition">
+        保存密码
+      </button>
+    </div>
+  </div>
+  
+  <!-- 管理员管理页面 -->
+  <div id="admin-panel" class="fixed inset-0 bg-black/30 flex items-center justify-center z-50 backdrop-blur-sm hidden">
+    <div class="glass-effect rounded-2xl p-8 max-w-3xl w-full mx-4 card-shadow theme-transition">
+      <div class="flex justify-between items-start mb-6">
+        <h3 class="text-xl font-bold text-neutral flex items-center gap-2 theme-transition">
+          <i class="fa fa-cog text-primary"></i>
+          管理员面板
+        </h3>
+        <button id="close-admin-panel" class="text-gray-400 hover:text-gray-600 transition-colors theme-transition">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      
+      <!-- 搜索用户 -->
+      <div class="mb-6">
         <input 
-          type="password" 
-          id="password-input" 
-          placeholder="请输入密码"
-          class="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white/60 text-neutral focus:border-primary transition-all duration-200"
+          type="text" 
+          id="search-user" 
+          placeholder="搜索用户..."
+          class="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white/60 text-neutral focus:border-primary transition-all duration-200 theme-transition"
         >
       </div>
       
+      <!-- 用户列表 -->
       <div class="mb-6">
-        <p id="password-error" class="text-red-500 text-sm text-center hidden">密码错误，请重新输入</p>
-        <p id="password-cooldown" class="text-orange-500 text-sm text-center hidden"></p>
+        <h4 class="text-lg font-medium text-neutral mb-3 theme-transition">用户管理</h4>
+        <div id="user-list" class="max-h-60 overflow-y-auto space-y-3">
+          <p class="text-gray-500 text-center py-4 theme-transition">加载用户中...</p>
+        </div>
       </div>
       
-      <button 
-        id="password-submit" 
-        class="w-full py-3 bg-primary hover:bg-primary/90 text-white px-6 rounded-lg transition-all duration-200 transform hover:scale-105 flex items-center justify-center shadow-md hover:shadow-primary/30"
-      >
-        <i class="fa fa-unlock-alt mr-2"></i>
-        <span>验证访问</span>
-      </button>
+      <!-- 用户战绩 -->
+      <div>
+        <h4 class="text-lg font-medium text-neutral mb-3 theme-transition">
+          <span id="current-user-records-title">用户战绩</span>
+        </h4>
+        <div id="user-records" class="max-h-60 overflow-y-auto space-y-3">
+          <p class="text-gray-500 text-center py-4 theme-transition">请选择一个用户查看战绩</p>
+        </div>
+      </div>
     </div>
   </div>
   
@@ -309,17 +449,33 @@
         <span>数字猜猜乐</span>
       </h1>
       <div class="flex items-center gap-3">
-        <!-- 战绩按钮 -->
+        <span class="bg-primary/10 text-primary px-4 py-1 rounded-full text-sm font-medium theme-transition">
+          欢迎，<span id="username-display">游客</span>
+        </span>
+        
+        <!-- 管理员按钮 -->
+        <button id="admin-btn" class="p-2 rounded-full hover:bg-gray-100/50 transition-colors duration-200 theme-transition hidden">
+          <i class="fa fa-cog text-neutral"></i>
+        </button>
+        
+        <!-- 战绩按钮 - 修复点击事件 -->
         <button id="records-btn" class="p-2 rounded-full hover:bg-gray-100/50 transition-colors duration-200 theme-transition">
           <i class="fa fa-bar-chart text-neutral"></i>
         </button>
+        
         <!-- 主题切换 -->
         <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100/50 transition-colors duration-200 theme-transition">
           <i class="fa fa-moon-o text-neutral"></i>
         </button>
+        
         <!-- 帮助按钮 -->
         <button id="help-btn" class="p-2 rounded-full hover:bg-gray-100/50 transition-colors duration-200 theme-transition">
           <i class="fa fa-question-circle text-neutral"></i>
+        </button>
+        
+        <!-- 退出登录 -->
+        <button id="logout-btn" class="p-2 rounded-full hover:bg-gray-100/50 transition-colors duration-200 theme-transition">
+          <i class="fa fa-sign-out text-neutral"></i>
         </button>
       </div>
     </div>
@@ -328,33 +484,33 @@
   <!-- 主内容区 -->
   <main class="flex-grow container mx-auto px-4 py-8 md:py-16 flex flex-col items-center justify-center relative z-20" style="display: none;">
     <!-- 游戏卡片 -->
-    <div class="w-full max-w-md glass-effect rounded-2xl card-shadow p-6 md:p-8 transform transition-all duration-300 hover:shadow-lg theme-transition" id="game-card">
+    <div id="game-card" class="w-full max-w-md glass-effect rounded-2xl card-shadow p-6 md:p-8 theme-transition">
       <!-- 游戏信息 -->
       <div class="mb-6">
-        <h2 class="text-[clamp(1.2rem,2.5vw,1.5rem)] font-semibold text-neutral mb-2 theme-transition">猜数字游戏</h2>
-        <p class="text-gray-600 text-sm md:text-base theme-transition">我已经想好了一个 <span class="font-bold text-primary">1-100</span> 之间的数字，来猜猜看吧！</p>
+        <h2 class="text-lg font-semibold text-neutral mb-2 theme-transition">猜数字游戏</h2>
+        <p class="text-gray-600 text-sm theme-transition">我已经想好了一个 <span class="font-bold text-primary">1-100</span> 之间的数字，来猜猜看吧！</p>
       </div>
       
-      <!-- 猜测次数 + 剩余次数 + 难度设置 -->
-      <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
+      <!-- 难度设置 -->
+      <div class="flex items-center justify-between mb-6 p-3 bg-gray-50/50 rounded-lg theme-transition">
+        <span class="text-sm text-gray-600 theme-transition">
+          <i class="fa fa-signal mr-1"></i> 难度: <span id="difficulty-text" class="font-medium">普通</span>
+        </span>
+        <label class="difficulty-switch">
+          <input type="checkbox" id="difficulty-toggle" class="theme-transition">
+          <span class="difficulty-slider theme-transition"></span>
+        </label>
+      </div>
+      
+      <!-- 猜测次数 + 剩余次数 -->
+      <div class="flex justify-between items-center gap-3 mb-6">
         <div class="bg-primary/10 rounded-full px-4 py-2 flex items-center theme-transition">
           <i class="fa fa-history text-primary mr-2"></i>
-          <span class="text-primary font-medium">猜测次数: <span id="guess-count" class="font-bold">0</span></span>
+          <span class="text-primary font-medium theme-transition">猜测次数: <span id="guess-count" class="font-bold">0</span></span>
         </div>
-        <!-- 剩余次数区域（添加统一类名用于样式控制） -->
-        <div id="remaining-count-area" class="bg-danger/10 rounded-full px-4 py-2 flex items-center remaining-count-area">
-          <i id="remaining-icon" class="fa fa-clock-o text-danger mr-2"></i>
-          <span id="remaining-text" class="text-danger font-medium">剩余次数: </span>
-          <span id="remaining-count" class="font-bold">10</span>
-        </div>
-        <!-- 难度设置 -->
-        <div class="flex items-center gap-2 bg-gray-100/70 rounded-full px-4 py-2 theme-transition dark:bg-slate-700/50">
-          <span class="text-sm font-medium text-gray-600 theme-transition" id="difficulty-text">普通</span>
-          <label class="difficulty-switch">
-            <input type="checkbox" id="difficulty-toggle">
-            <span class="difficulty-slider"></span>
-          </label>
-          <span class="text-sm font-medium text-gray-600 theme-transition">困难</span>
+        <div id="remaining-count-area" class="bg-danger/10 rounded-full px-4 py-2 flex items-center remaining-count-area theme-transition">
+          <i id="remaining-icon" class="fa fa-clock-o text-danger mr-2 theme-transition"></i>
+          <span id="remaining-text" class="text-danger font-medium theme-transition">剩余次数: <span id="remaining-count" class="font-bold">10</span></span>
         </div>
       </div>
       
@@ -367,11 +523,11 @@
             min="1" 
             max="100" 
             placeholder="输入1-100之间的数字"
-            class="flex-grow px-4 py-3 rounded-lg border border-gray-200 bg-white/60 text-neutral focus:border-primary transition-all duration-200 number-animation theme-transition"
+            class="flex-grow px-4 py-3 rounded-lg border border-gray-200 bg-white/60 text-neutral focus:border-primary transition-all duration-200 theme-transition"
           >
           <button 
             id="guess-btn" 
-            class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 flex items-center justify-center shadow-md hover:shadow-primary/30 theme-transition"
+            class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-primary/30 theme-transition"
           >
             <i class="fa fa-search mr-2"></i>
             <span>猜</span>
@@ -415,37 +571,22 @@
           <i class="fa fa-times"></i>
         </button>
       </div>
-      <ul class="space-y-2 text-gray-600 text-sm md:text-base theme-transition">
-        <li class="flex items-start gap-2">
-          <i class="fa fa-check-circle text-accent mt-1"></i>
-          <span>系统会随机生成一个1-100之间的整数</span>
-        </li>
-        <li class="flex items-start gap-2">
-          <i class="fa fa-check-circle text-accent mt-1"></i>
-          <span>普通模式限制10次猜测机会，困难模式限制5次</span>
-        </li>
-        <li class="flex items-start gap-2">
-          <i class="fa fa-check-circle text-accent mt-1"></i>
-          <span>你需要输入数字进行猜测，系统会提示"太大"或"太小"</span>
-        </li>
-        <li class="flex items-start gap-2">
-          <i class="fa fa-check-circle text-accent mt-1"></i>
-          <span>猜对数字即可获胜，系统会记录你的猜测次数</span>
-        </li>
-        <li class="flex items-start gap-2">
-          <i class="fa fa-check-circle text-accent mt-1"></i>
-          <span>可以随时点击重置按钮开始新游戏</span>
-        </li>
-      </ul>
+      <div class="space-y-3 text-gray-600 text-sm theme-transition">
+        <p><i class="fa fa-check-circle text-accent mr-2"></i> 系统会随机生成一个1-100之间的数字</p>
+        <p><i class="fa fa-check-circle text-accent mr-2"></i> 普通模式有10次猜测机会，困难模式有5次机会</p>
+        <p><i class="fa fa-check-circle text-accent mr-2"></i> 每次猜测后会提示"太大"或"太小"</p>
+        <p><i class="fa fa-check-circle text-accent mr-2"></i> 猜对数字或用完次数后游戏结束</p>
+        <p><i class="fa fa-check-circle text-accent mr-2"></i> 可以随时重置游戏开始新的一轮</p>
+      </div>
     </div>
   </main>
 
   <!-- 页脚 -->
   <footer class="w-full py-6 px-4 glass-effect mt-8 relative z-20 theme-transition" id="footer" style="display: none;">
     <div class="container mx-auto text-center text-gray-500 text-sm footer-text theme-transition">
-      <p>© 2025 数字猜猜乐 | 简约雪花版</p>
+      <p>© 2025 数字猜猜乐 | 简约版</p>
       <p class="mt-1">
-        <i class="fa fa-snowflake-o text-primary animate-spin-slow"></i> 日夜模式随心切换
+        日夜模式随心切换
       </p>
     </div>
   </footer>
@@ -463,8 +604,8 @@
           <button id="play-again-btn" class="flex-1 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-primary/30 theme-transition">
             再玩一次
           </button>
-          <button id="close-modal-btn" class="flex-1 py-3 bg-gray-100/70 hover:bg-gray-200/70 text-neutral rounded-lg transition-all duration-200 shadow-sm theme-transition">
-            关闭
+          <button id="view-records-btn" class="flex-1 py-3 bg-gray-100/70 hover:bg-gray-200/70 text-neutral rounded-lg transition-all duration-200 shadow-sm theme-transition">
+            查看战绩
           </button>
         </div>
       </div>
@@ -476,10 +617,11 @@
     <div class="glass-effect rounded-2xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="fail-modal-content">
       <div class="text-center">
         <div class="w-16 h-16 bg-danger/20 rounded-full flex items-center justify-center mx-auto mb-4 theme-transition">
-          <i class="fa fa-times-circle text-2xl text-danger animate-pulse"></i>
+          <i class="fa fa-times-circle text-2xl text-danger"></i>
         </div>
-        <h3 class="text-xl font-bold text-neutral mb-2 theme-transition">猜测次数用完了！</h3>
-        <p class="text-gray-600 mb-6 theme-transition">正确数字是: <span id="fail-target-number" class="font-bold text-primary">0</span></p>
+        <h3 class="text-xl font-bold text-neutral mb-2 theme-transition">很遗憾，次数用完了！</h3>
+        <p class="text-gray-600 mb-4 theme-transition">正确答案是：<span id="fail-target-number" class="font-bold text-primary">0</span></p>
+        <p class="text-gray-600 mb-6 theme-transition">再接再厉，下次一定能猜对！</p>
         <div class="flex gap-3">
           <button id="try-again-btn" class="flex-1 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-primary/30 theme-transition">
             再试一次
@@ -514,34 +656,64 @@
   </div>
 
   <script>
-    // 密码验证相关变量
-    const CORRECT_PASSWORD = "xswllcx"; // 已修改为指定密码
-    let errorCount = 0;
-    const MAX_ERROR_COUNT = 10; // 最大错误次数
-    const COOLDOWN_DURATION = 5 * 60 * 1000; // 5分钟冷静期（毫秒）
-    let cooldownEndTime = 0; // 冷静期结束时间
+    // 初始化LeanCloud
+    AV.init({
+      appId: "kWJIqXUSIWqV9EVcV8kEzoRv-gzGzoHsz",
+      appKey: "MLzM6QZLi55TQalmTYKHLxza",
+      serverURL: "https://kWJIqXUSIWqV9EVcV8kEzoRv-gzGzoHsz.lc-cn-n1-shared.com"
+    });
+    
+    // 定义数据模型
+    const GameUser = AV.Object.extend('GameUser');
+    const GameRecord = AV.Object.extend('GameRecord');
     
     // 游戏变量
     let targetNumber;
     let guessCount = 0;
     let gameActive = true;
-    let snowflakes = [];
-    const maxSnowflakes = 60; // 最大雪花数量
-    let isDarkMode = false; // 默认为白天模式
-    let difficulty = "normal"; // 难度：normal/ hard
-    const MAX_GUESS_NORMAL = 10; // 普通模式最大次数
-    const MAX_GUESS_HARD = 5; // 困难模式最大次数
-    let gameRecords = []; // 游戏战绩记录
+    let isDarkMode = false;
+    let difficulty = "normal";
+    const MAX_GUESS_NORMAL = 10;
+    const MAX_GUESS_HARD = 5;
+    let currentUser = null;
+    let themeIcon;
     
-    // DOM 元素
-    const passwordModal = document.getElementById('password-modal');
-    const passwordInput = document.getElementById('password-input');
-    const passwordSubmit = document.getElementById('password-submit');
-    const passwordError = document.getElementById('password-error');
-    const passwordCooldown = document.getElementById('password-cooldown');
+    // DOM元素
+    const authModal = document.getElementById('auth-modal');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const switchToRegister = document.getElementById('switch-to-register');
+    const switchToLogin = document.getElementById('switch-to-login');
+    const loginUsername = document.getElementById('login-username');
+    const loginPassword = document.getElementById('login-password');
+    const loginBtn = document.getElementById('login-btn');
+    const loginError = document.getElementById('login-error');
+    const registerUsername = document.getElementById('register-username');
+    const registerPassword = document.getElementById('register-password');
+    const registerConfirmPassword = document.getElementById('register-confirm-password');
+    const registerBtn = document.getElementById('register-btn');
+    const registerError = document.getElementById('register-error');
+    const registerSuccess = document.getElementById('register-success');
     const header = document.getElementById('header');
     const mainContent = document.querySelector('main');
     const footer = document.getElementById('footer');
+    const usernameDisplay = document.getElementById('username-display');
+    const logoutBtn = document.getElementById('logout-btn');
+    const adminBtn = document.getElementById('admin-btn');
+    const adminPanel = document.getElementById('admin-panel');
+    const closeAdminPanel = document.getElementById('close-admin-panel');
+    const searchUser = document.getElementById('search-user');
+    const userList = document.getElementById('user-list');
+    const userRecords = document.getElementById('user-records');
+    const currentUserRecordsTitle = document.getElementById('current-user-records-title');
+    const changePasswordModal = document.getElementById('change-password-modal');
+    const changePasswordContent = document.getElementById('change-password-content');
+    const closePasswordModal = document.getElementById('close-password-modal');
+    const targetUserId = document.getElementById('target-user-id');
+    const newPassword = document.getElementById('new-password');
+    const confirmNewPassword = document.getElementById('confirm-new-password');
+    const passwordError = document.getElementById('password-error');
+    const savePasswordBtn = document.getElementById('save-password-btn');
     
     const guessInput = document.getElementById('guess-input');
     const guessBtn = document.getElementById('guess-btn');
@@ -557,12 +729,11 @@
     const modalContent = document.getElementById('modal-content');
     const finalCountElement = document.getElementById('final-count');
     const playAgainBtn = document.getElementById('play-again-btn');
-    const closeModalBtn = document.getElementById('close-modal-btn');
+    const viewRecordsBtn = document.getElementById('view-records-btn');
     const helpBtn = document.getElementById('help-btn');
     const rulesCard = document.getElementById('rules-card');
     const closeRulesBtn = document.getElementById('close-rules');
     const themeToggle = document.getElementById('theme-toggle');
-    const snowContainer = document.getElementById('snow-container');
     const body = document.body;
     const gameCard = document.getElementById('game-card');
     const difficultyToggle = document.getElementById('difficulty-toggle');
@@ -579,716 +750,934 @@
     const closeRecordsModal = document.getElementById('close-records-modal');
     const clearRecordsBtn = document.getElementById('clear-records-btn');
     
-    // 初始化 - 检查是否在冷静期
+    // 页面加载完成后初始化
     document.addEventListener('DOMContentLoaded', () => {
-      checkCooldownStatus();
-      passwordInput.focus();
-    });
-    
-    // 检查冷静期状态
-    function checkCooldownStatus() {
-      const now = Date.now();
-      
-      // 如果还在冷静期内
-      if (now < cooldownEndTime) {
-        startCooldown();
-      } else {
-        // 冷静期结束，重置错误次数
-        errorCount = 0;
-        passwordCooldown.classList.add('hidden');
-        passwordSubmit.disabled = false;
-      }
-    }
-    
-    // 处理密码提交
-    passwordSubmit.addEventListener('click', verifyPassword);
-    
-    // 回车提交密码
-    passwordInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        verifyPassword();
-      }
-    });
-    
-    // 验证密码
-    function verifyPassword() {
-      const now = Date.now();
-      
-      // 检查是否在冷静期
-      if (now < cooldownEndTime) {
-        startCooldown();
-        return;
-      }
-      
-      const inputPassword = passwordInput.value.trim();
-      
-      if (inputPassword === CORRECT_PASSWORD) {
-        // 密码正确，进入游戏
-        passwordModal.classList.add('hidden');
-        // 显示游戏内容
-        header.style.display = 'block';
-        mainContent.style.display = 'flex';
-        footer.style.display = 'block';
-        // 初始化游戏
-        initGame();
-        // 创建雪花
-        for (let i = 0; i < 25; i++) {
-          setTimeout(createSnowflake, i * 100);
-        }
-      } else {
-        // 密码错误
-        errorCount++;
-        passwordError.classList.remove('hidden');
+        themeIcon = document.getElementById('theme-toggle').querySelector('i');
         
-        // 清空输入框并聚焦
-        passwordInput.value = '';
-        passwordInput.focus();
-        
-        // 检查是否达到最大错误次数
-        if (errorCount >= MAX_ERROR_COUNT) {
-          cooldownEndTime = now + COOLDOWN_DURATION;
-          startCooldown();
-        } else {
-          // 显示剩余错误次数
-          passwordError.textContent = `密码错误，还剩 ${MAX_ERROR_COUNT - errorCount} 次机会`;
-        }
-      }
-    }
-    
-    // 开始冷静期
-    function startCooldown() {
-      passwordError.classList.add('hidden');
-      passwordCooldown.classList.remove('hidden');
-      passwordSubmit.disabled = true;
-      passwordInput.disabled = true;
-      
-      // 更新倒计时
-      updateCooldownTimer();
-      
-      // 每秒更新一次倒计时
-      const cooldownInterval = setInterval(() => {
-        const now = Date.now();
-        
-        if (now >= cooldownEndTime) {
-          // 冷静期结束
-          clearInterval(cooldownInterval);
-          passwordCooldown.classList.add('hidden');
-          passwordSubmit.disabled = false;
-          passwordInput.disabled = false;
-          passwordInput.focus();
-          errorCount = 0; // 重置错误次数
-        } else {
-          updateCooldownTimer();
-        }
-      }, 1000);
-    }
-    
-    // 更新冷静期倒计时
-    function updateCooldownTimer() {
-      const now = Date.now();
-      const remainingTime = cooldownEndTime - now;
-      
-      const minutes = Math.floor(remainingTime / (60 * 1000));
-      const seconds = Math.floor((remainingTime % (60 * 1000)) / 1000);
-      
-      passwordCooldown.textContent = `错误次数过多，请 ${minutes}分${seconds}秒后再试`;
-    }
-    
-    // 初始化游戏
-    function initGame() {
-      // 生成1-100之间的随机数
-      targetNumber = Math.floor(Math.random() * 100) + 1;
-      guessCount = 0;
-      gameActive = true;
-      
-      // 重置UI
-      guessInput.value = '';
-      guessCountElement.textContent = '0';
-      // 更新剩余次数（包含颜色判断）
-      updateRemainingCount();
-      resultMessage.textContent = '';
-      resultMessage.classList.add('hidden');
-      guessHistory.innerHTML = '<span class="text-gray-400 text-sm theme-transition">暂无猜测记录</span>';
-      
-      // 启用输入框和猜测按钮
-      guessInput.disabled = false;
-      guessBtn.disabled = false;
-      
-      // 聚焦输入框
-      guessInput.focus();
-      
-      console.log(`调试：目标数字是 ${targetNumber}`);
-    }
-    
-    // 更新剩余次数（核心修改：统一图标、文字、数字颜色）
-    function updateRemainingCount() {
-      const maxGuess = difficulty === "normal" ? MAX_GUESS_NORMAL : MAX_GUESS_HARD;
-      const remaining = maxGuess - guessCount;
-      remainingCountElement.textContent = remaining;
-      
-      // 计算阈值（总次数的一半，向上取整）
-      const threshold = Math.ceil(maxGuess / 2);
-      
-      // 定义颜色（区分深色/浅色模式）
-      const greenColor = isDarkMode ? '#4ade80' : '#10B981';
-      const greenBgColor = isDarkMode ? 'rgba(22, 163, 74, 0.15)' : 'rgba(16, 185, 129, 0.1)';
-      const redColor = isDarkMode ? '#f87171' : '#EF4444';
-      const redBgColor = isDarkMode ? 'rgba(220, 38, 38, 0.15)' : 'rgba(239, 68, 68, 0.1)';
-      
-      // 根据剩余次数设置统一颜色
-      if (remaining > threshold) {
-        // 剩余次数充足 - 绿色系（图标、文字、数字、背景色统一）
-        remainingIcon.style.color = greenColor;
-        remainingText.style.color = greenColor;
-        remainingCountElement.style.color = greenColor;
-        remainingCountArea.style.backgroundColor = greenBgColor;
-      } else {
-        // 剩余次数不足 - 红色系（图标、文字、数字、背景色统一）
-        remainingIcon.style.color = redColor;
-        remainingText.style.color = redColor;
-        remainingCountElement.style.color = redColor;
-        remainingCountArea.style.backgroundColor = redBgColor;
-      }
-    }
-    
-    // 处理猜测
-    function handleGuess() {
-      if (!gameActive) return;
-      
-      // 获取输入值并验证
-      const guessValue = parseInt(guessInput.value.trim());
-      
-      if (isNaN(guessValue) || guessValue < 1 || guessValue > 100) {
-        showResult('请输入1-100之间的有效数字', isDarkMode ? 'text-orange-400 bg-orange-900/20' : 'text-orange-500 bg-orange-50');
-        return;
-      }
-      
-      // 增加猜测次数
-      guessCount++;
-      guessCountElement.textContent = guessCount;
-      // 更新剩余次数（包含颜色更新）
-      updateRemainingCount();
-      
-      // 添加到历史记录
-      addToHistory(guessValue);
-      
-      // 获取当前难度的最大次数
-      const maxGuess = difficulty === "normal" ? MAX_GUESS_NORMAL : MAX_GUESS_HARD;
-      
-      // 检查猜测结果
-      if (guessValue === targetNumber) {
-        // 猜对了
-        gameActive = false;
-        showResult(`恭喜！猜对了！`, isDarkMode ? 'text-green-400 bg-green-900/20' : 'text-accent bg-green-50');
-        
-        // 禁用输入框和猜测按钮
-        guessInput.disabled = true;
-        guessBtn.disabled = true;
-        
-        // 记录战绩
-        recordGameResult(true, guessCount);
-        
-        // 显示胜利弹窗
-        setTimeout(showSuccessModal, 800);
-      } else if (guessCount >= maxGuess) {
-        // 次数用完，游戏失败
-        gameActive = false;
-        showResult(`猜测次数用完了！正确数字是${targetNumber}`, isDarkMode ? 'text-red-400 bg-red-900/20' : 'text-danger bg-red-50');
-        
-        // 禁用输入框和猜测按钮
-        guessInput.disabled = true;
-        guessBtn.disabled = true;
-        
-        // 记录战绩
-        recordGameResult(false, guessCount);
-        
-        // 显示失败弹窗
-        setTimeout(showFailModal, 800);
-      } else if (guessValue < targetNumber) {
-        // 太小
-        showResult(`太小了！再试试更大的数字`, isDarkMode ? 'text-blue-400 bg-blue-900/20' : 'text-blue-500 bg-blue-50');
-      } else {
-        // 太大
-        showResult(`太大了！再试试更小的数字`, isDarkMode ? 'text-purple-400 bg-purple-900/20' : 'text-purple-500 bg-purple-50');
-      }
-      
-      // 清空输入框并聚焦
-      guessInput.value = '';
-      guessInput.focus();
-    }
-    
-    // 记录游戏结果
-    function recordGameResult(isWin, count) {
-      const now = new Date();
-      const timeStr = now.toLocaleString();
-      const difficultyStr = difficulty === "normal" ? "普通" : "困难";
-      
-      gameRecords.unshift({
-        time: timeStr,
-        isWin: isWin,
-        count: count,
-        difficulty: difficultyStr
-      });
-      
-      // 更新战绩显示
-      updateRecordsList();
-    }
-    
-    // 更新战绩列表
-    function updateRecordsList() {
-      if (gameRecords.length === 0) {
-        recordsList.innerHTML = '<p class="text-gray-500 text-center py-4 theme-transition">暂无游戏记录</p>';
-        return;
-      }
-      
-      recordsList.innerHTML = '';
-      
-      gameRecords.forEach((record, index) => {
-        const recordItem = document.createElement('div');
-        recordItem.className = `p-3 rounded-lg ${isDarkMode ? 'bg-slate-700/30' : 'bg-gray-100/50'} flex justify-between items-center theme-transition`;
-        
-        const leftContent = document.createElement('div');
-        leftContent.className = 'flex flex-col';
-        
-        const timeText = document.createElement('span');
-        timeText.className = `text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} theme-transition`;
-        timeText.textContent = record.time;
-        
-        const detailText = document.createElement('span');
-        detailText.className = 'text-xs mt-1';
-        detailText.textContent = `难度: ${record.difficulty} | 猜测次数: ${record.count}`;
-        
-        leftContent.appendChild(timeText);
-        leftContent.appendChild(detailText);
-        
-        const rightContent = document.createElement('span');
-        rightContent.className = `font-medium ${record.isWin ? 'text-accent' : 'text-danger'} theme-transition`;
-        rightContent.textContent = record.isWin ? '胜利' : '失败';
-        
-        recordItem.appendChild(leftContent);
-        recordItem.appendChild(rightContent);
-        
-        recordsList.appendChild(recordItem);
-      });
-    }
-    
-    // 显示结果提示
-    function showResult(message, classes) {
-      resultMessage.textContent = message;
-      resultMessage.className = `text-center px-4 py-2 rounded-lg result-animation ${classes} theme-transition`;
-      resultMessage.classList.remove('hidden');
-      
-      // 添加动画效果
-      resultMessage.style.animation = 'none';
-      setTimeout(() => {
-        resultMessage.style.animation = '';
-      }, 10);
-    }
-    
-    // 添加到历史记录
-    function addToHistory(number) {
-      // 如果是第一次猜测，清空"暂无猜测记录"文本
-      if (guessHistory.innerHTML.includes('暂无猜测记录')) {
-        guessHistory.innerHTML = '';
-      }
-      
-      // 创建历史记录项
-      const historyItem = document.createElement('span');
-      historyItem.className = `px-3 py-1 rounded-full text-sm ${isDarkMode ? 'bg-slate-700/50 text-gray-200' : 'bg-gray-100/70 text-gray-700'} transition-all duration-200 hover:bg-primary/10 hover:text-primary theme-transition`;
-      historyItem.textContent = number;
-      
-      // 添加到历史记录容器
-      guessHistory.appendChild(historyItem);
-      
-      // 滚动到最新记录
-      guessHistory.scrollLeft = guessHistory.scrollWidth;
-    }
-    
-    // 显示胜利弹窗
-    function showSuccessModal() {
-      successModal.classList.remove('hidden');
-      finalCountElement.textContent = guessCount;
-      
-      // 适配深色模式
-      if (isDarkMode) {
-        successModal.classList.add('bg-black/50');
-        modalContent.classList.add('glass-effect-dark', 'card-shadow-dark');
-        modalContent.classList.remove('glass-effect', 'card-shadow');
-      } else {
-        successModal.classList.remove('bg-black/50');
-        modalContent.classList.add('glass-effect', 'card-shadow');
-        modalContent.classList.remove('glass-effect-dark', 'card-shadow-dark');
-      }
-      
-      // 添加弹窗动画
-      setTimeout(() => {
-        modalContent.classList.remove('scale-95', 'opacity-0');
-        modalContent.classList.add('scale-100', 'opacity-100');
-      }, 10);
-    }
-    
-    // 显示失败弹窗
-    function showFailModal() {
-      failModal.classList.remove('hidden');
-      failTargetNumber.textContent = targetNumber;
-      
-      // 适配深色模式
-      if (isDarkMode) {
-        failModal.classList.add('bg-black/50');
-        failModalContent.classList.add('glass-effect-dark', 'card-shadow-dark');
-        failModalContent.classList.remove('glass-effect', 'card-shadow');
-      } else {
-        failModal.classList.remove('bg-black/50');
-        failModalContent.classList.add('glass-effect', 'card-shadow');
-        failModalContent.classList.remove('glass-effect-dark', 'card-shadow-dark');
-      }
-      
-      // 添加弹窗动画
-      setTimeout(() => {
-        failModalContent.classList.remove('scale-95', 'opacity-0');
-        failModalContent.classList.add('scale-100', 'opacity-100');
-      }, 10);
-    }
-    
-    // 显示战绩弹窗
-    function showRecordsModal() {
-      recordsModal.classList.remove('hidden');
-      
-      // 适配深色模式
-      if (isDarkMode) {
-        recordsModal.classList.add('bg-black/50');
-        recordsModalContent.classList.add('glass-effect-dark', 'card-shadow-dark');
-        recordsModalContent.classList.remove('glass-effect', 'card-shadow');
-      } else {
-        recordsModal.classList.remove('bg-black/50');
-        recordsModalContent.classList.add('glass-effect', 'card-shadow');
-        recordsModalContent.classList.remove('glass-effect-dark', 'card-shadow-dark');
-      }
-      
-      // 添加弹窗动画
-      setTimeout(() => {
-        recordsModalContent.classList.remove('scale-95', 'opacity-0');
-        recordsModalContent.classList.add('scale-100', 'opacity-100');
-      }, 10);
-    }
-    
-    // 关闭胜利弹窗
-    function closeSuccessModal() {
-      modalContent.classList.remove('scale-100', 'opacity-100');
-      modalContent.classList.add('scale-95', 'opacity-0');
-      
-      setTimeout(() => {
-        successModal.classList.add('hidden');
-      }, 300);
-    }
-    
-    // 关闭失败弹窗
-    function closeFailModal() {
-      failModalContent.classList.remove('scale-100', 'opacity-100');
-      failModalContent.classList.add('scale-95', 'opacity-0');
-      
-      setTimeout(() => {
-        failModal.classList.add('hidden');
-      }, 300);
-    }
-    
-    // 关闭战绩弹窗
-    function closeRecordsModalFunc() {
-      recordsModalContent.classList.remove('scale-100', 'opacity-100');
-      recordsModalContent.classList.add('scale-95', 'opacity-0');
-      
-      setTimeout(() => {
-        recordsModal.classList.add('hidden');
-      }, 300);
-    }
-    
-    // 切换难度
-    function toggleDifficulty() {
-      difficulty = difficultyToggle.checked ? "hard" : "normal";
-      // 更新难度显示文本
-      difficultyText.textContent = difficulty === "normal" ? "普通" : "困难";
-      
-      // 重置游戏
-      initGame();
-    }
-    
-    // 切换日夜模式
-    function toggleTheme() {
-      isDarkMode = !isDarkMode;
-      
-      // 切换body的dark-theme类
-      if (isDarkMode) {
-        body.classList.add('dark-theme');
-      } else {
-        body.classList.remove('dark-theme');
-      }
-      
-      // 更新主题图标
-      const themeIcon = themeToggle.querySelector('i');
-      if (isDarkMode) {
-        // 切换到夜晚模式
-        themeIcon.classList.remove('fa-moon-o');
-        themeIcon.classList.add('fa-sun-o');
-        themeIcon.style.color = '#fde047'; // 黄色太阳图标
-        
-        // 更新游戏卡片样式
-        gameCard.classList.remove('glass-effect', 'card-shadow');
-        gameCard.classList.add('glass-effect-dark', 'card-shadow-dark');
-        
-        // 更新规则卡片样式
-        rulesCard.classList.remove('glass-effect', 'card-shadow');
-        rulesCard.classList.add('glass-effect-dark', 'card-shadow-dark');
-        
-        // 更新顶部导航样式
-        header.classList.remove('glass-effect');
-        header.classList.add('glass-effect-dark');
-        
-        // 更新底部样式
-        footer.classList.remove('glass-effect');
-        footer.classList.add('glass-effect-dark');
-        
-        // 更新雪花样式
-        document.querySelectorAll('.snowflake').forEach(snow => {
-          snow.classList.add('snowflake-dark');
+        // 切换登录/注册表单
+        switchToRegister.addEventListener('click', () => {
+            loginForm.classList.add('hidden');
+            registerForm.classList.remove('hidden');
+            clearAuthErrors();
         });
         
-        // 更新弹窗样式
-        successModal.classList.add('bg-black/50');
-        modalContent.classList.remove('glass-effect', 'card-shadow');
-        modalContent.classList.add('glass-effect-dark', 'card-shadow-dark');
-        
-        failModal.classList.add('bg-black/50');
-        failModalContent.classList.remove('glass-effect', 'card-shadow');
-        failModalContent.classList.add('glass-effect-dark', 'card-shadow-dark');
-        
-        recordsModal.classList.add('bg-black/50');
-        recordsModalContent.classList.remove('glass-effect', 'card-shadow');
-        recordsModalContent.classList.add('glass-effect-dark', 'card-shadow-dark');
-        
-      } else {
-        // 切换到白天模式
-        themeIcon.classList.remove('fa-sun-o');
-        themeIcon.classList.add('fa-moon-o');
-        themeIcon.style.color = '#1F2937'; // 深灰月亮图标
-        
-        // 更新游戏卡片样式
-        gameCard.classList.remove('glass-effect-dark', 'card-shadow-dark');
-        gameCard.classList.add('glass-effect', 'card-shadow');
-        
-        // 更新规则卡片样式
-        rulesCard.classList.remove('glass-effect-dark', 'card-shadow-dark');
-        rulesCard.classList.add('glass-effect', 'card-shadow');
-        
-        // 更新顶部导航样式
-        header.classList.remove('glass-effect-dark');
-        header.classList.add('glass-effect');
-        
-        // 更新底部样式
-        footer.classList.remove('glass-effect-dark');
-        footer.classList.add('glass-effect');
-        
-        // 更新雪花样式
-        document.querySelectorAll('.snowflake').forEach(snow => {
-          snow.classList.remove('snowflake-dark');
+        switchToLogin.addEventListener('click', () => {
+            registerForm.classList.add('hidden');
+            loginForm.classList.remove('hidden');
+            clearAuthErrors();
         });
         
-        // 更新弹窗样式
-        successModal.classList.remove('bg-black/50');
-        modalContent.classList.remove('glass-effect-dark', 'card-shadow-dark');
-        modalContent.classList.add('glass-effect', 'card-shadow');
+        // 登录按钮事件
+        loginBtn.addEventListener('click', async () => {
+            const username = loginUsername.value.trim();
+            const password = loginPassword.value.trim();
+            
+            if (!username || !password) {
+                showAuthError('login', '请输入用户名和密码');
+                return;
+            }
+            
+            try {
+                const query = new AV.Query(GameUser);
+                query.equalTo('username', username);
+                const user = await query.first();
+                
+                if (!user) {
+                    showAuthError('login', '用户名不存在');
+                    return;
+                }
+                
+                if (user.get('password') !== password) {
+                    showAuthError('login', '密码错误');
+                    return;
+                }
+                
+                // 登录成功
+                currentUser = { 
+                    id: user.id, 
+                    username: user.get('username'),
+                    role: user.get('role') || 'user'
+                };
+                
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                authModal.classList.add('hidden');
+                header.style.display = 'block';
+                mainContent.style.display = 'flex';
+                footer.style.display = 'block';
+                usernameDisplay.textContent = currentUser.username;
+                
+                // 如果是管理员，显示管理员按钮
+                if (currentUser.role === 'admin') {
+                    adminBtn.classList.remove('hidden');
+                    loadAllUsers();
+                }
+                
+                initGame();
+            } catch (error) {
+                console.error('登录失败:', error);
+                showAuthError('login', `登录失败：${error.message || '网络异常'}`);
+            }
+        });
         
-        failModal.classList.remove('bg-black/50');
-        failModalContent.classList.remove('glass-effect-dark', 'card-shadow-dark');
-        failModalContent.classList.add('glass-effect', 'card-shadow');
+        // 注册按钮事件
+        registerBtn.addEventListener('click', async () => {
+            const username = registerUsername.value.trim();
+            const password = registerPassword.value.trim();
+            const confirmPwd = registerConfirmPassword.value.trim();
+            
+            if (!username || !password || !confirmPwd) {
+                showAuthError('register', '请填写完整信息');
+                return;
+            }
+            
+            if (password !== confirmPwd) {
+                showAuthError('register', '两次密码不一致');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showAuthError('register', '密码长度不能少于6位');
+                return;
+            }
+            
+            try {
+                const query = new AV.Query(GameUser);
+                query.equalTo('username', username);
+                const existingUser = await query.first();
+                
+                if (existingUser) {
+                    showAuthError('register', '用户名已被占用');
+                    return;
+                }
+                
+                const newUser = new GameUser();
+                newUser.set('username', username);
+                newUser.set('password', password);
+                newUser.set('role', 'user'); // 默认普通用户
+                await newUser.save();
+                
+                registerSuccess.textContent = '注册成功！3秒后跳转到登录';
+                registerSuccess.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    registerForm.classList.add('hidden');
+                    loginForm.classList.remove('hidden');
+                    loginUsername.value = username;
+                    clearAuthErrors();
+                }, 3000);
+            } catch (error) {
+                console.error('注册失败:', error);
+                showAuthError('register', `注册失败：${error.message || '网络异常'}`);
+            }
+        });
         
-        recordsModal.classList.remove('bg-black/50');
-        recordsModalContent.classList.remove('glass-effect-dark', 'card-shadow-dark');
-        recordsModalContent.classList.add('glass-effect', 'card-shadow');
-      }
-      
-      // 更新历史记录项样式
-      updateHistoryItemsStyle();
-      // 更新战绩列表样式
-      updateRecordsList();
-      // 更新剩余次数颜色（适配主题切换）
-      updateRemainingCount();
-      
-      // 更新输入框占位符颜色
-      guessInput.style.color = isDarkMode ? '#f8fafc' : '#1F2937';
-      guessInput.placeholder = isDarkMode ? '输入1-100之间的数字' : '输入1-100之间的数字';
-    }
-    
-    // 更新历史记录项样式
-    function updateHistoryItemsStyle() {
-      const historyItems = guessHistory.querySelectorAll('span');
-      historyItems.forEach(item => {
-        if (item.textContent === '暂无猜测记录') {
-          item.className = `text-gray-400 text-sm theme-transition`;
-        } else {
-          if (isDarkMode) {
-            item.className = 'px-3 py-1 rounded-full text-sm bg-slate-700/50 text-gray-200 transition-all duration-200 hover:bg-primary/10 hover:text-primary theme-transition';
-          } else {
-            item.className = 'px-3 py-1 rounded-full text-sm bg-gray-100/70 text-gray-700 transition-all duration-200 hover:bg-primary/10 hover:text-primary theme-transition';
-          }
+        // 退出登录
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('currentUser');
+            window.location.reload();
+        });
+        
+        // 管理员面板相关
+        adminBtn.addEventListener('click', () => {
+            adminPanel.classList.remove('hidden');
+            setTimeout(() => {
+                adminPanel.querySelector('div').classList.remove('scale-95', 'opacity-0');
+                adminPanel.querySelector('div').classList.add('scale-100', 'opacity-100');
+            }, 10);
+        });
+        
+        closeAdminPanel.addEventListener('click', () => {
+            const panelContent = adminPanel.querySelector('div');
+            panelContent.classList.remove('scale-100', 'opacity-100');
+            panelContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                adminPanel.classList.add('hidden');
+            }, 300);
+        });
+        
+        // 搜索用户
+        searchUser.addEventListener('input', debounce(async (e) => {
+            const searchTerm = e.target.value.trim().toLowerCase();
+            await loadAllUsers(searchTerm);
+        }, 300));
+        
+        // 修改密码弹窗相关
+        closePasswordModal.addEventListener('click', () => {
+            changePasswordContent.classList.remove('scale-100', 'opacity-100');
+            changePasswordContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                changePasswordModal.classList.add('hidden');
+                newPassword.value = '';
+                confirmNewPassword.value = '';
+                passwordError.textContent = '';
+                passwordError.classList.add('hidden');
+            }, 300);
+        });
+        
+        savePasswordBtn.addEventListener('click', async () => {
+            const userId = targetUserId.value;
+            const password = newPassword.value.trim();
+            const confirmPwd = confirmNewPassword.value.trim();
+            
+            if (!password || !confirmPwd) {
+                passwordError.textContent = '请输入密码';
+                passwordError.classList.remove('hidden');
+                return;
+            }
+            
+            if (password !== confirmPwd) {
+                passwordError.textContent = '两次密码不一致';
+                passwordError.classList.remove('hidden');
+                return;
+            }
+            
+            if (password.length < 6) {
+                passwordError.textContent = '密码长度不能少于6位';
+                passwordError.classList.remove('hidden');
+                return;
+            }
+            
+            try {
+                const user = AV.Object.createWithoutData('GameUser', userId);
+                user.set('password', password);
+                await user.save();
+                
+                // 关闭弹窗并刷新用户列表
+                changePasswordContent.classList.remove('scale-100', 'opacity-100');
+                changePasswordContent.classList.add('scale-95', 'opacity-0');
+                
+                setTimeout(() => {
+                    changePasswordModal.classList.add('hidden');
+                    newPassword.value = '';
+                    confirmNewPassword.value = '';
+                    passwordError.textContent = '';
+                    passwordError.classList.add('hidden');
+                    loadAllUsers();
+                }, 300);
+                
+                alert('密码修改成功');
+            } catch (error) {
+                console.error('修改密码失败:', error);
+                passwordError.textContent = `修改失败：${error.message || '网络异常'}`;
+                passwordError.classList.remove('hidden');
+            }
+        });
+        
+        // 游戏初始化
+        function initGame() {
+            targetNumber = Math.floor(Math.random() * 100) + 1;
+            guessCount = 0;
+            gameActive = true;
+            guessInput.value = '';
+            guessCountElement.textContent = '0';
+            remainingCountElement.textContent = difficulty === 'normal' ? MAX_GUESS_NORMAL : MAX_GUESS_HARD;
+            resultMessage.textContent = '';
+            resultMessage.classList.add('hidden');
+            guessHistory.innerHTML = '<span class="text-gray-400 text-sm theme-transition">暂无猜测记录</span>';
+            guessInput.disabled = false;
+            guessBtn.disabled = false;
+            guessInput.focus();
+            updateRemainingCount();
         }
-      });
+        
+        // 处理猜测
+        guessBtn.addEventListener('click', handleGuess);
+        guessInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleGuess();
+        });
+        
+        function handleGuess() {
+            if (!gameActive) return;
+            
+            const guessValue = parseInt(guessInput.value.trim());
+            
+            // 验证输入
+            if (isNaN(guessValue) || guessValue < 1 || guessValue > 100) {
+                showResult('请输入1-100之间的有效数字', 'bg-warning/20 text-warning');
+                return;
+            }
+            
+            guessCount++;
+            guessCountElement.textContent = guessCount;
+            
+            // 更新剩余次数
+            const maxGuesses = difficulty === 'normal' ? MAX_GUESS_NORMAL : MAX_GUESS_HARD;
+            const remaining = maxGuesses - guessCount;
+            remainingCountElement.textContent = remaining;
+            updateRemainingCount();
+            
+            // 添加到历史记录
+            updateGuessHistory(guessValue);
+            
+            // 检查猜测结果
+            if (guessValue === targetNumber) {
+                // 猜对了
+                showResult('恭喜你，猜对了！', 'bg-accent/20 text-accent');
+                gameActive = false;
+                guessInput.disabled = true;
+                guessBtn.disabled = true;
+                saveGameRecord(true);
+                showSuccessModal();
+            } else if (guessCount >= maxGuesses) {
+                // 次数用完
+                showResult(`很遗憾，次数用完了！正确答案是${targetNumber}`, 'bg-danger/20 text-danger');
+                gameActive = false;
+                guessInput.disabled = true;
+                guessBtn.disabled = true;
+                saveGameRecord(false);
+                showFailModal();
+            } else if (guessValue < targetNumber) {
+                // 太小
+                showResult('猜小了，再试试更大的数字！', 'bg-primary/20 text-primary');
+            } else {
+                // 太大
+                showResult('猜大了，再试试更小的数字！', 'bg-primary/20 text-primary');
+            }
+            
+            guessInput.value = '';
+            guessInput.focus();
+        }
+        
+        // 显示结果
+        function showResult(message, className) {
+            resultMessage.textContent = message;
+            resultMessage.className = `text-center px-4 py-2 rounded-lg result-animation ${className} theme-transition`;
+            resultMessage.classList.remove('hidden');
+            
+            resultMessage.style.animation = 'none';
+            setTimeout(() => {
+                resultMessage.style.animation = '';
+            }, 10);
+        }
+        
+        // 更新猜测历史
+        function updateGuessHistory(guess) {
+            // 移除初始提示文本
+            if (guessHistory.querySelector('.text-gray-400')) {
+                guessHistory.innerHTML = '';
+            }
+            
+            const historyItem = document.createElement('span');
+            historyItem.className = `px-3 py-1 rounded-full text-sm font-medium ${
+                guess < targetNumber ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 
+                guess > targetNumber ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' : 
+                'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
+            } theme-transition number-animation`;
+            historyItem.textContent = guess;
+            
+            guessHistory.appendChild(historyItem);
+        }
+        
+        // 更新剩余次数
+        // 更新剩余次数（修改后：充足绿色，不足红色）
+function updateRemainingCount() {
+    const maxGuess = difficulty === 'normal' ? MAX_GUESS_NORMAL : MAX_GUESS_HARD;
+    const remaining = maxGuess - guessCount;
+    remainingCountElement.textContent = remaining;
+    
+    // 定义「不足」的阈值：普通模式≤3次，困难模式≤1次（可根据需求调整）
+    const insufficientThreshold = difficulty === 'normal' ? 2 : 2;
+    
+    if (remaining <= insufficientThreshold) {
+        // 次数不足：红色
+        remainingCountArea.classList.remove('bg-accent/10'); // 移除绿色背景
+        remainingCountArea.classList.add('bg-danger/10');    // 添加红色背景
+        remainingIcon.classList.remove('text-accent');       // 移除绿色图标
+        remainingIcon.classList.add('text-danger');          // 添加红色图标
+        remainingText.classList.remove('text-accent');       // 移除绿色文字
+        remainingText.classList.add('text-danger');          // 添加红色文字
+    } else {
+        // 次数充足：绿色
+        remainingCountArea.classList.remove('bg-danger/10'); // 移除红色背景
+        remainingCountArea.classList.add('bg-accent/10');    // 添加绿色背景（accent是配置的绿色#10B981）
+        remainingIcon.classList.remove('text-danger');       // 移除红色图标
+        remainingIcon.classList.add('text-accent');          // 添加绿色图标
+        remainingText.classList.remove('text-danger');       // 移除红色文字
+        remainingText.classList.add('text-accent');          // 添加绿色文字
     }
-    
-    // 创建雪花
-    function createSnowflake() {
-      if (snowflakes.length >= maxSnowflakes) return;
-      
-      const snowflake = document.createElement('div');
-      const snowIcons = ['❄️', '❅', '❆', '✻', '✼'];
-      
-      // 随机选择雪花图标
-      snowflake.innerHTML = snowIcons[Math.floor(Math.random() * snowIcons.length)];
-      snowflake.classList.add('snowflake');
-      
-      // 深色模式雪花样式
-      if (isDarkMode) {
-        snowflake.classList.add('snowflake-dark');
-      }
-      
-      // 随机位置、大小和动画时长
-      const size = Math.random() * 10 + 5;
-      const left = Math.random() * 100;
-      const duration = Math.random() * 15 + 10;
-      const delay = Math.random() * 5;
-      const opacity = Math.random() * 0.5 + 0.3;
-      
-      // 设置雪花样式
-      snowflake.style.left = `${left}%`;
-      snowflake.style.top = '-20px';
-      snowflake.style.fontSize = `${size}px`;
-      snowflake.style.animationDuration = `${duration}s`;
-      snowflake.style.animationDelay = `${delay}s`;
-      snowflake.style.opacity = opacity;
-      
-      // 添加到容器
-      snowContainer.appendChild(snowflake);
-      snowflakes.push(snowflake);
-      
-      // 雪花落地后移除
-      setTimeout(() => {
-        snowflake.remove();
-        snowflakes = snowflakes.filter(s => s !== snowflake);
-      }, (duration + delay) * 1000);
-    }
-    
-    // 清空游戏记录
-    function clearGameRecords() {
-      gameRecords = [];
-      updateRecordsList();
-    }
-    
-    // 事件监听
-    guessBtn.addEventListener('click', handleGuess);
-    
-    // 回车触发猜测
-    guessInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        handleGuess();
-      }
+}
+        
+        // 重置游戏
+        resetBtn.addEventListener('click', initGame);
+        
+        // 胜利弹窗
+        function showSuccessModal() {
+            finalCountElement.textContent = guessCount;
+            successModal.classList.remove('hidden');
+            
+            // 适配深色模式
+            if (isDarkMode) {
+                successModal.classList.add('bg-black/50');
+                modalContent.classList.add('glass-effect-dark', 'card-shadow-dark');
+                modalContent.classList.remove('glass-effect', 'card-shadow');
+            } else {
+                successModal.classList.remove('bg-black/50');
+                modalContent.classList.add('glass-effect', 'card-shadow');
+                modalContent.classList.remove('glass-effect-dark', 'card-shadow-dark');
+            }
+            
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+        
+        // 失败弹窗
+        function showFailModal() {
+            failTargetNumber.textContent = targetNumber;
+            failModal.classList.remove('hidden');
+            
+            // 适配深色模式
+            if (isDarkMode) {
+                failModal.classList.add('bg-black/50');
+                failModalContent.classList.add('glass-effect-dark', 'card-shadow-dark');
+                failModalContent.classList.remove('glass-effect', 'card-shadow');
+            } else {
+                failModal.classList.remove('bg-black/50');
+                failModalContent.classList.add('glass-effect', 'card-shadow');
+                failModalContent.classList.remove('glass-effect-dark', 'card-shadow-dark');
+            }
+            
+            setTimeout(() => {
+                failModalContent.classList.remove('scale-95', 'opacity-0');
+                failModalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+        
+        // 显示战绩弹窗
+        function showRecordsModal() {
+            recordsModal.classList.remove('hidden');
+            loadUserRecords();
+            
+            // 适配深色模式
+            if (isDarkMode) {
+                recordsModal.classList.add('bg-black/50');
+                recordsModalContent.classList.add('glass-effect-dark', 'card-shadow-dark');
+                recordsModalContent.classList.remove('glass-effect', 'card-shadow');
+            } else {
+                recordsModal.classList.remove('bg-black/50');
+                recordsModalContent.classList.add('glass-effect', 'card-shadow');
+                recordsModalContent.classList.remove('glass-effect-dark', 'card-shadow-dark');
+            }
+            
+            setTimeout(() => {
+                recordsModalContent.classList.remove('scale-95', 'opacity-0');
+                recordsModalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+        
+        // 确保战绩按钮能正常工作
+        recordsBtn.addEventListener('click', showRecordsModal);
+        
+        // 关闭胜利弹窗
+        playAgainBtn.addEventListener('click', () => {
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                successModal.classList.add('hidden');
+                initGame();
+            }, 300);
+        });
+        
+        viewRecordsBtn.addEventListener('click', () => {
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                successModal.classList.add('hidden');
+                showRecordsModal();
+            }, 300);
+        });
+        
+        // 关闭失败弹窗
+        tryAgainBtn.addEventListener('click', () => {
+            failModalContent.classList.remove('scale-100', 'opacity-100');
+            failModalContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                failModal.classList.add('hidden');
+                initGame();
+            }, 300);
+        });
+        
+        closeFailModalBtn.addEventListener('click', () => {
+            failModalContent.classList.remove('scale-100', 'opacity-100');
+            failModalContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                failModal.classList.add('hidden');
+            }, 300);
+        });
+        
+        // 关闭战绩弹窗
+        closeRecordsModal.addEventListener('click', () => {
+            recordsModalContent.classList.remove('scale-100', 'opacity-100');
+            recordsModalContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                recordsModal.classList.add('hidden');
+            }, 300);
+        });
+        
+        // 切换难度
+        difficultyToggle.addEventListener('change', () => {
+            difficulty = difficultyToggle.checked ? "hard" : "normal";
+            difficultyText.textContent = difficulty === "normal" ? "普通" : "困难";
+            initGame();
+        });
+        
+        // 帮助按钮
+        helpBtn.addEventListener('click', () => {
+            rulesCard.classList.toggle('hidden');
+        });
+        
+        closeRulesBtn.addEventListener('click', () => {
+            rulesCard.classList.add('hidden');
+        });
+        
+        // 清空战绩
+        clearRecordsBtn.addEventListener('click', async () => {
+            if (confirm('确定要清空所有战绩记录吗？')) {
+                try {
+                    const query = new AV.Query(GameRecord);
+                    query.equalTo('user', AV.Object.createWithoutData('GameUser', currentUser.id));
+                    const records = await query.find();
+                    
+                    if (records.length > 0) {
+                        await AV.Object.destroyAll(records);
+                        loadUserRecords();
+                    }
+                } catch (error) {
+                    console.error('清空记录失败:', error);
+                    alert('清空记录失败: ' + error.message);
+                }
+            }
+        });
+        
+        // 切换主题
+        themeToggle.addEventListener('click', toggleTheme);
+        
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            body.classList.toggle('dark-theme', isDarkMode);
+            
+            if (isDarkMode) {
+                // 切换到深色模式
+                themeIcon.classList.remove('fa-moon-o');
+                themeIcon.classList.add('fa-sun-o');
+                
+                // 更新游戏卡片样式
+                gameCard.classList.remove('glass-effect', 'card-shadow');
+                gameCard.classList.add('glass-effect-dark', 'card-shadow-dark');
+                
+                // 更新规则卡片样式
+                rulesCard.classList.remove('glass-effect', 'card-shadow');
+                rulesCard.classList.add('glass-effect-dark', 'card-shadow-dark');
+                
+                // 更新顶部导航样式
+                header.classList.remove('glass-effect');
+                header.classList.add('glass-effect-dark');
+                
+                // 更新底部样式
+                footer.classList.remove('glass-effect');
+                footer.classList.add('glass-effect-dark');
+                
+                // 更新弹窗样式
+                successModal.classList.add('bg-black/50');
+                modalContent.classList.remove('glass-effect', 'card-shadow');
+                modalContent.classList.add('glass-effect-dark', 'card-shadow-dark');
+                
+                failModal.classList.add('bg-black/50');
+                failModalContent.classList.remove('glass-effect', 'card-shadow');
+                failModalContent.classList.add('glass-effect-dark', 'card-shadow-dark');
+                
+                recordsModal.classList.add('bg-black/50');
+                recordsModalContent.classList.remove('glass-effect', 'card-shadow');
+                recordsModalContent.classList.add('glass-effect-dark', 'card-shadow-dark');
+                
+                adminPanel.classList.add('bg-black/50');
+                adminPanel.querySelector('div').classList.remove('glass-effect', 'card-shadow');
+                adminPanel.querySelector('div').classList.add('glass-effect-dark', 'card-shadow-dark');
+                
+                changePasswordModal.classList.add('bg-black/50');
+                changePasswordContent.classList.remove('glass-effect', 'card-shadow');
+                changePasswordContent.classList.add('glass-effect-dark', 'card-shadow-dark');
+                
+            } else {
+                // 切换到白天模式
+                themeIcon.classList.remove('fa-sun-o');
+                themeIcon.classList.add('fa-moon-o');
+                
+                // 更新游戏卡片样式
+                gameCard.classList.remove('glass-effect-dark', 'card-shadow-dark');
+                gameCard.classList.add('glass-effect', 'card-shadow');
+                
+                // 更新规则卡片样式
+                rulesCard.classList.remove('glass-effect-dark', 'card-shadow-dark');
+                rulesCard.classList.add('glass-effect', 'card-shadow');
+                
+                // 更新顶部导航样式
+                header.classList.remove('glass-effect-dark');
+                header.classList.add('glass-effect');
+                
+                // 更新底部样式
+                footer.classList.remove('glass-effect-dark');
+                footer.classList.add('glass-effect');
+                
+                // 更新弹窗样式
+                successModal.classList.remove('bg-black/50');
+                modalContent.classList.remove('glass-effect-dark', 'card-shadow-dark');
+                modalContent.classList.add('glass-effect', 'card-shadow');
+                
+                failModal.classList.remove('bg-black/50');
+                failModalContent.classList.remove('glass-effect-dark', 'card-shadow-dark');
+                failModalContent.classList.add('glass-effect', 'card-shadow');
+                
+                recordsModal.classList.remove('bg-black/50');
+                recordsModalContent.classList.remove('glass-effect-dark', 'card-shadow-dark');
+                recordsModalContent.classList.add('glass-effect', 'card-shadow');
+                
+                adminPanel.classList.remove('bg-black/50');
+                adminPanel.querySelector('div').classList.remove('glass-effect-dark', 'card-shadow-dark');
+                adminPanel.querySelector('div').classList.add('glass-effect', 'card-shadow');
+                
+                changePasswordModal.classList.remove('bg-black/50');
+                changePasswordContent.classList.remove('glass-effect-dark', 'card-shadow-dark');
+                changePasswordContent.classList.add('glass-effect', 'card-shadow');
+            }
+            
+            // 保存主题设置到本地存储
+            localStorage.setItem('darkMode', isDarkMode);
+            
+            // 更新历史记录项的样式
+            updateHistoryItemsStyle();
+        }
+        
+        // 更新历史记录项的样式（深色模式适配）
+        function updateHistoryItemsStyle() {
+            const items = guessHistory.querySelectorAll('span');
+            items.forEach(item => {
+                if (isDarkMode) {
+                    item.classList.remove('bg-blue-100', 'text-blue-600', 'bg-orange-100', 'text-orange-600', 'bg-green-100', 'text-green-600');
+                    item.classList.add('dark:bg-blue-900/30', 'dark:text-blue-400', 'dark:bg-orange-900/30', 'dark:text-orange-400', 'dark:bg-green-900/30', 'dark:text-green-400');
+                } else {
+                    item.classList.remove('dark:bg-blue-900/30', 'dark:text-blue-400', 'dark:bg-orange-900/30', 'dark:text-orange-400', 'dark:bg-green-900/30', 'dark:text-green-400');
+                    item.classList.add('bg-blue-100', 'text-blue-600', 'bg-orange-100', 'text-orange-600', 'bg-green-100', 'text-green-600');
+                }
+            });
+        }
+        
+        // 难度切换
+        difficultyToggle.addEventListener('change', () => {
+            if (difficultyToggle.checked) {
+                difficulty = 'hard';
+                difficultyText.textContent = '困难';
+            } else {
+                difficulty = 'normal';
+                difficultyText.textContent = '普通';
+            }
+            initGame();
+        });
+        
+        // 主题切换 - 已合并到toggleTheme函数
+        
+        // 帮助按钮 - 已处理
+        
+        // 战绩相关
+        recordsBtn.addEventListener('click', () => {
+            loadUserRecords();
+            recordsModal.classList.remove('hidden');
+            
+            setTimeout(() => {
+                recordsModalContent.classList.remove('scale-95', 'opacity-0');
+                recordsModalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        });
+        
+        viewRecordsBtn.addEventListener('click', () => {
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                successModal.classList.add('hidden');
+                loadUserRecords();
+                recordsModal.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    recordsModalContent.classList.remove('scale-95', 'opacity-0');
+                    recordsModalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            }, 300);
+        });
+        
+        closeRecordsModal.addEventListener('click', () => {
+            recordsModalContent.classList.remove('scale-100', 'opacity-100');
+            recordsModalContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                recordsModal.classList.add('hidden');
+            }, 300);
+        });
+        
+        clearRecordsBtn.addEventListener('click', async () => {
+            if (!confirm('确定要清空所有游戏记录吗？此操作不可恢复！')) {
+                return;
+            }
+            
+            try {
+                const query = new AV.Query(GameRecord);
+                query.equalTo('user', AV.Object.createWithoutData('GameUser', currentUser.id));
+                const records = await query.find();
+                
+                if (records.length > 0) {
+                    await AV.Object.destroyAll(records);
+                    loadUserRecords();
+                }
+            } catch (error) {
+                console.error('清空记录失败:', error);
+                alert('清空记录失败，请稍后再试');
+            }
+        });
+        
+        // 保存游戏记录
+        async function saveGameRecord(isSuccess) {
+            if (!currentUser) return;
+            
+            try {
+                const record = new GameRecord();
+                record.set('user', AV.Object.createWithoutData('GameUser', currentUser.id));
+                record.set('isSuccess', isSuccess);
+                record.set('guessCount', guessCount);
+                record.set('targetNumber', targetNumber);
+                record.set('difficulty', difficulty);
+                record.set('date', new Date());
+                
+                await record.save();
+            } catch (error) {
+                console.error('保存记录失败:', error);
+            }
+        }
+        
+        // 加载用户战绩
+        async function loadUserRecords(userId = currentUser.id) {
+            try {
+                const query = new AV.Query(GameRecord);
+                query.equalTo('user', AV.Object.createWithoutData('GameUser', userId));
+                query.descending('date');
+                query.limit(10); // 只加载最近10条记录
+                const records = await query.find();
+                
+                if (records.length === 0) {
+                    recordsList.innerHTML = '<p class="text-gray-500 text-center py-4 theme-transition">暂无游戏记录</p>';
+                    return;
+                }
+                
+                recordsList.innerHTML = '';
+                records.forEach(record => {
+                    const item = document.createElement('div');
+                    item.className = 'record-item theme-transition';
+                    
+                    const date = new Date(record.get('date'));
+                    const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                    
+                    item.innerHTML = `
+                        <div class="record-date theme-transition">${formattedDate} · ${record.get('difficulty') === 'normal' ? '普通模式' : '困难模式'}</div>
+                        <div class="record-stats">
+                            <span>猜测次数: ${record.get('guessCount')}</span>
+                            <span class="record-${record.get('isSuccess') ? 'success' : 'fail'}">${record.get('isSuccess') ? '成功' : '失败'}</span>
+                        </div>
+                    `;
+                    
+                    recordsList.appendChild(item);
+                });
+            } catch (error) {
+                console.error('加载记录失败:', error);
+                recordsList.innerHTML = '<p class="text-red-500 text-center py-4 theme-transition">加载记录失败</p>';
+            }
+        }
+        
+        // 加载所有用户（管理员功能）
+        async function loadAllUsers(searchTerm = '') {
+            try {
+                const query = new AV.Query(GameUser);
+                if (searchTerm) {
+                    query.contains('username', searchTerm);
+                }
+                const users = await query.find();
+                
+                userList.innerHTML = '';
+                users.forEach(user => {
+                    // 管理员不能删除自己
+                    const isCurrentUser = currentUser && user.id === currentUser.id;
+                    
+                    const userItem = document.createElement('div');
+                    userItem.className = 'flex justify-between items-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-lg cursor-pointer hover:bg-gray-100/60 dark:hover:bg-gray-700/60 transition-colors theme-transition';
+                    userItem.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <i class="fa fa-user ${user.get('role') === 'admin' ? 'text-primary' : 'text-gray-500'} theme-transition"></i>
+                            <span class="theme-transition">${user.get('username')} ${user.get('role') === 'admin' ? '<span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">管理员</span>' : ''}</span>
+                        </div>
+                        <div class="flex gap-1">
+                            <button class="view-records-btn p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" data-user-id="${user.id}" data-username="${user.get('username')}">
+                                <i class="fa fa-history text-gray-500 theme-transition"></i>
+                            </button>
+                            <button class="edit-password-btn p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${isCurrentUser ? 'opacity-50 cursor-not-allowed' : ''}" data-user-id="${user.id}" ${isCurrentUser ? 'disabled' : ''}>
+                                <i class="fa fa-key text-gray-500 theme-transition"></i>
+                            </button>
+                            <button class="delete-user-btn p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${isCurrentUser ? 'opacity-50 cursor-not-allowed' : ''}" data-user-id="${user.id}" data-username="${user.get('username')}" ${isCurrentUser ? 'disabled' : ''}>
+                                <i class="fa fa-trash text-gray-500 theme-transition"></i>
+                            </button>
+                        </div>
+                    `;
+                    
+                    userList.appendChild(userItem);
+                    
+                    // 查看用户战绩
+                    userItem.querySelector('.view-records-btn').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const userId = e.currentTarget.getAttribute('data-user-id');
+                        const username = e.currentTarget.getAttribute('data-username');
+                        currentUserRecordsTitle.textContent = `${username} 的战绩`;
+                        loadUserRecords(userId);
+                    });
+                    
+                    // 修改用户密码
+                    const editBtn = userItem.querySelector('.edit-password-btn');
+                    if (!isCurrentUser) {
+                        editBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const userId = e.currentTarget.getAttribute('data-user-id');
+                            targetUserId.value = userId;
+                            changePasswordModal.classList.remove('hidden');
+                            
+                            // 适配深色模式
+                            if (isDarkMode) {
+                                changePasswordModal.classList.add('bg-black/50');
+                                changePasswordContent.classList.add('glass-effect-dark', 'card-shadow-dark');
+                                changePasswordContent.classList.remove('glass-effect', 'card-shadow');
+                            } else {
+                                changePasswordModal.classList.remove('bg-black/50');
+                                changePasswordContent.classList.add('glass-effect', 'card-shadow');
+                                changePasswordContent.classList.remove('glass-effect-dark', 'card-shadow-dark');
+                            }
+                            
+                            setTimeout(() => {
+                                changePasswordContent.classList.remove('scale-95', 'opacity-0');
+                                changePasswordContent.classList.add('scale-100', 'opacity-100');
+                            }, 10);
+                        });
+                    }
+                    
+                    // 删除用户
+                    const deleteBtn = userItem.querySelector('.delete-user-btn');
+                    if (!isCurrentUser) {
+                        deleteBtn.addEventListener('click', async (e) => {
+                            e.stopPropagation();
+                            const userId = e.currentTarget.getAttribute('data-user-id');
+                            const username = e.currentTarget.getAttribute('data-username');
+                            
+                            if (!confirm(`确定要删除用户 "${username}" 吗？此操作将同时删除该用户的所有游戏记录！`)) {
+                                return;
+                            }
+                            
+                            try {
+                                // 先删除用户的所有游戏记录
+                                const recordQuery = new AV.Query(GameRecord);
+                                recordQuery.equalTo('user', AV.Object.createWithoutData('GameUser', userId));
+                                const records = await recordQuery.find();
+                                if (records.length > 0) {
+                                    await AV.Object.destroyAll(records);
+                                }
+                                
+                                // 再删除用户
+                                const userToDelete = AV.Object.createWithoutData('GameUser', userId);
+                                await userToDelete.destroy();
+                                
+                                // 刷新用户列表
+                                loadAllUsers(searchTerm);
+                                userRecords.innerHTML = '<p class="text-gray-500 text-center py-4 theme-transition">请选择一个用户查看战绩</p>';
+                                
+                                alert(`用户 "${username}" 已成功删除`);
+                            } catch (error) {
+                                console.error('删除用户失败:', error);
+                                alert(`删除失败：${error.message || '网络异常'}`);
+                            }
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error('加载用户失败:', error);
+                userList.innerHTML = '<p class="text-red-500 text-center py-4 theme-transition">加载用户失败</p>';
+            }
+        }
+        
+        // 工具函数：清除认证错误信息
+        function clearAuthErrors() {
+            loginError.textContent = '';
+            loginError.classList.add('hidden');
+            registerError.textContent = '';
+            registerError.classList.add('hidden');
+            registerSuccess.textContent = '';
+            registerSuccess.classList.add('hidden');
+        }
+        
+        // 工具函数：显示认证错误信息
+        function showAuthError(type, message) {
+            clearAuthErrors();
+            
+            if (type === 'login') {
+                loginError.textContent = message;
+                loginError.classList.remove('hidden');
+            } else {
+                registerError.textContent = message;
+                registerError.classList.remove('hidden');
+            }
+        }
+        
+        // 工具函数：防抖
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+        
+        // 检查是否有已登录用户
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            currentUser = JSON.parse(savedUser);
+            authModal.classList.add('hidden');
+            header.style.display = 'block';
+            mainContent.style.display = 'flex';
+            footer.style.display = 'block';
+            usernameDisplay.textContent = currentUser.username;
+            
+            // 如果是管理员，显示管理员按钮
+           // 统一、容错的管理员判断
+  if (currentUser && currentUser.role && currentUser.role.toLowerCase() === 'admin') {
+    adminBtn.classList.remove('hidden'); // 显示齿轮按钮
+    loadAllUsers();
+    console.log('页面加载：管理员已登录，显示按钮');
+  } else {
+    adminBtn.classList.add('hidden');
+    console.log('页面加载：非管理员，隐藏按钮');
+  }
+}
+        
+        // 检查主题设置
+        const savedTheme = localStorage.getItem('darkMode');
+        if (savedTheme === 'true') {
+            isDarkMode = true;
+            body.classList.add('dark-theme');
+            themeIcon.classList.remove('fa-moon-o');
+            themeIcon.classList.add('fa-sun-o');
+            toggleTheme(); // 应用深色模式样式
+        }
     });
-    
-    // 重置游戏
-    resetBtn.addEventListener('click', initGame);
-    
-    // 再玩一次
-    playAgainBtn.addEventListener('click', () => {
-      closeSuccessModal();
-      setTimeout(initGame, 300);
-    });
-    
-    // 关闭胜利弹窗
-    closeModalBtn.addEventListener('click', closeSuccessModal);
-    
-    // 点击胜利弹窗外部关闭
-    successModal.addEventListener('click', (e) => {
-      if (e.target === successModal) {
-        closeSuccessModal();
-      }
-    });
-    
-    // 再试一次
-    tryAgainBtn.addEventListener('click', () => {
-      closeFailModal();
-      setTimeout(initGame, 300);
-    });
-    
-    // 关闭失败弹窗
-    closeFailModalBtn.addEventListener('click', closeFailModal);
-    
-    // 点击失败弹窗外部关闭
-    failModal.addEventListener('click', (e) => {
-      if (e.target === failModal) {
-        closeFailModal();
-      }
-    });
-    
-    // 显示游戏规则
-    helpBtn.addEventListener('click', () => {
-      rulesCard.classList.toggle('hidden');
-      
-      // 适配深色模式
-      if (isDarkMode) {
-        rulesCard.classList.add('glass-effect-dark', 'card-shadow-dark');
-        rulesCard.classList.remove('glass-effect', 'card-shadow');
-      } else {
-        rulesCard.classList.add('glass-effect', 'card-shadow');
-        rulesCard.classList.remove('glass-effect-dark', 'card-shadow-dark');
-      }
-      
-      // 如果显示规则卡片，滚动到它
-      if (!rulesCard.classList.contains('hidden')) {
-        rulesCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-    });
-    
-    // 关闭游戏规则
-    closeRulesBtn.addEventListener('click', () => {
-      rulesCard.classList.add('hidden');
-    });
-    
-    // 输入框变化时移除错误状态
-    guessInput.addEventListener('input', () => {
-      if (!resultMessage.classList.contains('hidden')) {
-        resultMessage.classList.add('hidden');
-      }
-    });
-    
-    // 日夜模式切换按钮点击事件
-    themeToggle.addEventListener('click', toggleTheme);
-    
-    // 难度切换事件
-    difficultyToggle.addEventListener('change', toggleDifficulty);
-    
-    // 显示战绩弹窗
-    recordsBtn.addEventListener('click', showRecordsModal);
-    
-    // 关闭战绩弹窗
-    closeRecordsModal.addEventListener('click', closeRecordsModalFunc);
-    
-    // 点击战绩弹窗外部关闭
-    recordsModal.addEventListener('click', (e) => {
-      if (e.target === recordsModal) {
-        closeRecordsModalFunc();
-      }
-    });
-    
-    // 清空战绩
-    clearRecordsBtn.addEventListener('click', clearGameRecords);
-    
-    // 定期创建雪花
-    setInterval(createSnowflake, 150);
-    
-    // 响应式调整
-    function handleResize() {
-      // 可以添加根据屏幕尺寸调整布局的逻辑
-    }
-    
-    window.addEventListener('resize', handleResize);
   </script>
 </body>
 </html>
