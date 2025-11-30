@@ -400,7 +400,7 @@
   
   <!-- 管理员管理页面 -->
   <div id="admin-panel" class="fixed inset-0 bg-black/30 flex items-center justify-center z-50 backdrop-blur-sm hidden">
-    <div class="glass-effect rounded-2xl p-8 max-w-3xl w-full mx-4 card-shadow theme-transition">
+    <div class="glass-effect rounded-2xl p-8 max-w-3xl w-full mx-4 card-shadow theme-transition max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-start mb-6">
         <h3 class="text-xl font-bold text-neutral flex items-center gap-2 theme-transition">
           <i class="fa fa-cog text-primary"></i>
@@ -409,6 +409,58 @@
         <button id="close-admin-panel" class="text-gray-400 hover:text-gray-600 transition-colors theme-transition">
           <i class="fa fa-times"></i>
         </button>
+      </div>
+      
+      <!-- 新增：管理员功能区域 -->
+      <div class="mb-6 p-4 bg-blue-50/50 dark:bg-blue-900/20 rounded-lg">
+        <h4 class="text-lg font-medium text-neutral mb-3 flex items-center gap-2 theme-transition">
+          <i class="fa fa-shield text-primary"></i>
+          管理员功能
+        </h4>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- 修改自身密码 -->
+          <div class="p-3 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+            <h5 class="font-medium text-neutral mb-2 theme-transition">修改我的密码</h5>
+            <div class="flex gap-2">
+              <input 
+                type="password" 
+                id="admin-self-password" 
+                placeholder="新密码（至少6位）"
+                class="flex-1 px-3 py-2 rounded-lg border border-gray-200 bg-white/60 text-neutral text-sm focus:border-primary transition-all duration-200 theme-transition"
+                minlength="6"
+              >
+              <button 
+                id="change-self-password-btn"
+                class="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition-all duration-200 text-sm"
+              >
+                修改
+              </button>
+            </div>
+            <p id="self-password-error" class="text-red-500 text-xs mt-1 hidden theme-transition"></p>
+          </div>
+          
+          <!-- 添加管理员权限 -->
+          <div class="p-3 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+            <h5 class="font-medium text-neutral mb-2 theme-transition">添加管理员</h5>
+            <div class="flex gap-2">
+              <input 
+                type="text" 
+                id="add-admin-username" 
+                placeholder="输入用户名"
+                class="flex-1 px-3 py-2 rounded-lg border border-gray-200 bg-white/60 text-neutral text-sm focus:border-primary transition-all duration-200 theme-transition"
+              >
+              <button 
+                id="add-admin-btn"
+                class="px-4 py-2 bg-secondary hover:bg-secondary/90 text-white rounded-lg transition-all duration-200 text-sm"
+              >
+                添加
+              </button>
+            </div>
+            <p id="add-admin-error" class="text-red-500 text-xs mt-1 hidden theme-transition"></p>
+            <p id="add-admin-success" class="text-green-500 text-xs mt-1 hidden theme-transition"></p>
+          </div>
+        </div>
       </div>
       
       <!-- 搜索用户 -->
@@ -715,6 +767,15 @@
     const passwordError = document.getElementById('password-error');
     const savePasswordBtn = document.getElementById('save-password-btn');
     
+    // 新增：管理员功能DOM元素
+    const adminSelfPassword = document.getElementById('admin-self-password');
+    const changeSelfPasswordBtn = document.getElementById('change-self-password-btn');
+    const selfPasswordError = document.getElementById('self-password-error');
+    const addAdminUsername = document.getElementById('add-admin-username');
+    const addAdminBtn = document.getElementById('add-admin-btn');
+    const addAdminError = document.getElementById('add-admin-error');
+    const addAdminSuccess = document.getElementById('add-admin-success');
+    
     const guessInput = document.getElementById('guess-input');
     const guessBtn = document.getElementById('guess-btn');
     const resetBtn = document.getElementById('reset-btn');
@@ -965,6 +1026,108 @@
             }
         });
         
+        // 新增：修改自身密码功能
+        changeSelfPasswordBtn.addEventListener('click', async () => {
+            const newPassword = adminSelfPassword.value.trim();
+            
+            if (!newPassword) {
+                showSelfPasswordError('请输入新密码');
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                showSelfPasswordError('密码长度不能少于6位');
+                return;
+            }
+            
+            try {
+                // 获取当前用户对象
+                const query = new AV.Query(GameUser);
+                const currentUserObj = await query.get(currentUser.id);
+                
+                // 更新密码
+                currentUserObj.set('password', newPassword);
+                await currentUserObj.save();
+                
+                // 清空输入框并显示成功消息
+                adminSelfPassword.value = '';
+                selfPasswordError.textContent = '';
+                selfPasswordError.classList.add('hidden');
+                
+                // 显示成功提示
+                showTempMessage('密码修改成功！', 'success');
+                
+            } catch (error) {
+                console.error('修改密码失败:', error);
+                showSelfPasswordError(`修改失败：${error.message || '网络异常'}`);
+            }
+        });
+        
+        // 新增：添加管理员权限功能
+        addAdminBtn.addEventListener('click', async () => {
+            const username = addAdminUsername.value.trim();
+            
+            if (!username) {
+                showAddAdminError('请输入用户名');
+                return;
+            }
+            
+            // 不能将自己重复设置为管理员
+            if (username === currentUser.username) {
+                showAddAdminError('您已经是管理员');
+                return;
+            }
+            
+            try {
+                // 查找目标用户
+                const query = new AV.Query(GameUser);
+                query.equalTo('username', username);
+                const targetUser = await query.first();
+                
+                if (!targetUser) {
+                    showAddAdminError('用户不存在');
+                    return;
+                }
+                
+                // 检查是否已经是管理员
+                if (targetUser.get('role') === 'admin') {
+                    showAddAdminError('该用户已经是管理员');
+                    return;
+                }
+                
+                // 确认操作
+                if (!confirm(`确定要将用户 "${username}" 设置为管理员吗？\n\n管理员拥有以下权限：\n• 查看所有用户信息\n• 修改用户密码\n• 删除用户账号\n• 查看用户战绩`)) {
+                    return;
+                }
+                
+                // 更新用户角色为管理员
+                targetUser.set('role', 'admin');
+                await targetUser.save();
+                
+                // 清空输入框并显示成功消息
+                addAdminUsername.value = '';
+                addAdminError.textContent = '';
+                addAdminError.classList.add('hidden');
+                
+                // 显示成功消息
+                addAdminSuccess.textContent = `用户 "${username}" 已成功设置为管理员`;
+                addAdminSuccess.classList.remove('hidden');
+                
+                // 刷新用户列表
+                loadAllUsers();
+                
+                // 3秒后隐藏成功消息
+                setTimeout(() => {
+                    addAdminSuccess.textContent = '';
+                    addAdminSuccess.classList.add('hidden');
+                }, 3000);
+                
+            } catch (error) {
+                console.error('添加管理员失败:', error);
+                showAddAdminError(`操作失败：${error.message || '网络异常'}`);
+            }
+        });
+        
         // 游戏初始化
         function initGame() {
             targetNumber = Math.floor(Math.random() * 100) + 1;
@@ -1071,33 +1234,32 @@
         }
         
         // 更新剩余次数
-        // 更新剩余次数（修改后：充足绿色，不足红色）
-function updateRemainingCount() {
-    const maxGuess = difficulty === 'normal' ? MAX_GUESS_NORMAL : MAX_GUESS_HARD;
-    const remaining = maxGuess - guessCount;
-    remainingCountElement.textContent = remaining;
-    
-    // 定义「不足」的阈值：普通模式≤3次，困难模式≤1次（可根据需求调整）
-    const insufficientThreshold = difficulty === 'normal' ? 2 : 2;
-    
-    if (remaining <= insufficientThreshold) {
-        // 次数不足：红色
-        remainingCountArea.classList.remove('bg-accent/10'); // 移除绿色背景
-        remainingCountArea.classList.add('bg-danger/10');    // 添加红色背景
-        remainingIcon.classList.remove('text-accent');       // 移除绿色图标
-        remainingIcon.classList.add('text-danger');          // 添加红色图标
-        remainingText.classList.remove('text-accent');       // 移除绿色文字
-        remainingText.classList.add('text-danger');          // 添加红色文字
-    } else {
-        // 次数充足：绿色
-        remainingCountArea.classList.remove('bg-danger/10'); // 移除红色背景
-        remainingCountArea.classList.add('bg-accent/10');    // 添加绿色背景（accent是配置的绿色#10B981）
-        remainingIcon.classList.remove('text-danger');       // 移除红色图标
-        remainingIcon.classList.add('text-accent');          // 添加绿色图标
-        remainingText.classList.remove('text-danger');       // 移除红色文字
-        remainingText.classList.add('text-accent');          // 添加绿色文字
-    }
-}
+        function updateRemainingCount() {
+            const maxGuess = difficulty === 'normal' ? MAX_GUESS_NORMAL : MAX_GUESS_HARD;
+            const remaining = maxGuess - guessCount;
+            remainingCountElement.textContent = remaining;
+            
+            // 定义「不足」的阈值：普通模式≤3次，困难模式≤1次（可根据需求调整）
+            const insufficientThreshold = difficulty === 'normal' ? 2 : 2;
+            
+            if (remaining <= insufficientThreshold) {
+                // 次数不足：红色
+                remainingCountArea.classList.remove('bg-accent/10'); // 移除绿色背景
+                remainingCountArea.classList.add('bg-danger/10');    // 添加红色背景
+                remainingIcon.classList.remove('text-accent');       // 移除绿色图标
+                remainingIcon.classList.add('text-danger');          // 添加红色图标
+                remainingText.classList.remove('text-accent');       // 移除绿色文字
+                remainingText.classList.add('text-danger');          // 添加红色文字
+            } else {
+                // 次数充足：绿色
+                remainingCountArea.classList.remove('bg-danger/10'); // 移除红色背景
+                remainingCountArea.classList.add('bg-accent/10');    // 添加绿色背景（accent是配置的绿色#10B981）
+                remainingIcon.classList.remove('text-danger');       // 移除红色图标
+                remainingIcon.classList.add('text-accent');          // 添加绿色图标
+                remainingText.classList.remove('text-danger');       // 移除红色文字
+                remainingText.classList.add('text-accent');          // 添加绿色文字
+            }
+        }
         
         // 重置游戏
         resetBtn.addEventListener('click', initGame);
@@ -1462,12 +1624,20 @@ function updateRemainingCount() {
         }
         
         // 加载用户战绩
-        async function loadUserRecords(userId = currentUser.id) {
+        async function loadUserRecords(targetUserId = null) {
+            // 确定要加载的用户ID
+            const userIdToLoad = targetUserId || (currentUser ? currentUser.id : null);
+            
+            if (!userIdToLoad) {
+                recordsList.innerHTML = '<p class="text-gray-500 text-center py-4 theme-transition">用户未登录</p>';
+                return;
+            }
+            
             try {
                 const query = new AV.Query(GameRecord);
-                query.equalTo('user', AV.Object.createWithoutData('GameUser', userId));
+                query.equalTo('user', AV.Object.createWithoutData('GameUser', userIdToLoad));
                 query.descending('date');
-                query.limit(10); // 只加载最近10条记录
+                query.limit(10);
                 const records = await query.find();
                 
                 if (records.length === 0) {
@@ -1487,7 +1657,7 @@ function updateRemainingCount() {
                         <div class="record-date theme-transition">${formattedDate} · ${record.get('difficulty') === 'normal' ? '普通模式' : '困难模式'}</div>
                         <div class="record-stats">
                             <span>猜测次数: ${record.get('guessCount')}</span>
-                            <span class="record-${record.get('isSuccess') ? 'success' : 'fail'}">${record.get('isSuccess') ? '成功' : '失败'}</span>
+                            <span class="${record.get('isSuccess') ? 'record-success' : 'record-fail'}">${record.get('isSuccess') ? '成功' : '失败'}</span>
                         </div>
                     `;
                     
@@ -1518,7 +1688,13 @@ function updateRemainingCount() {
                     userItem.innerHTML = `
                         <div class="flex items-center gap-2">
                             <i class="fa fa-user ${user.get('role') === 'admin' ? 'text-primary' : 'text-gray-500'} theme-transition"></i>
-                            <span class="theme-transition">${user.get('username')} ${user.get('role') === 'admin' ? '<span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">管理员</span>' : ''}</span>
+                            <span class="theme-transition">
+                                ${user.get('username')} 
+                                ${user.get('role') === 'admin' ? 
+                                    '<span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full ml-2">管理员</span>' : 
+                                    '<span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full ml-2">普通用户</span>'
+                                }
+                            </span>
                         </div>
                         <div class="flex gap-1">
                             <button class="view-records-btn p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" data-user-id="${user.id}" data-username="${user.get('username')}">
@@ -1527,13 +1703,18 @@ function updateRemainingCount() {
                             <button class="edit-password-btn p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${isCurrentUser ? 'opacity-50 cursor-not-allowed' : ''}" data-user-id="${user.id}" ${isCurrentUser ? 'disabled' : ''}>
                                 <i class="fa fa-key text-gray-500 theme-transition"></i>
                             </button>
-                            <button class="delete-user-btn p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${isCurrentUser ? 'opacity-50 cursor-not-allowed' : ''}" data-user-id="${user.id}" data-username="${user.get('username')}" ${isCurrentUser ? 'disabled' : ''}>
-                                <i class="fa fa-trash text-gray-500 theme-transition"></i>
-                            </button>
-                        </div>
-                    `;
-                    
-                    userList.appendChild(userItem);
+${user.get('role') !== 'admin' ? `
+                                <button class="promote-admin-btn p-1.5 rounded-full hover:bg-yellow-200 dark:hover:bg-yellow-700 transition-colors" data-user-id="${user.id}" data-username="${user.get('username')}">
+                                    <i class="fa fa-star text-yellow-500 theme-transition"></i>
+                                </button>
+                            ` : ''}
+                    <button class="delete-user-btn p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${isCurrentUser ? 'opacity-50 cursor-not-allowed' : ''}" data-user-id="${user.id}" data-username="${user.get('username')}" ${isCurrentUser ? 'disabled' : ''}>
+                        <i class="fa fa-trash text-gray-500 theme-transition"></i>
+                    </button>
+                </div>
+            `;
+            
+            userList.appendChild(userItem);
                     
                     // 查看用户战绩
                     userItem.querySelector('.view-records-btn').addEventListener('click', (e) => {
@@ -1541,7 +1722,12 @@ function updateRemainingCount() {
                         const userId = e.currentTarget.getAttribute('data-user-id');
                         const username = e.currentTarget.getAttribute('data-username');
                         currentUserRecordsTitle.textContent = `${username} 的战绩`;
-                        loadUserRecords(userId);
+                        
+                        // 清空现有内容，显示加载中
+                        userRecords.innerHTML = '<p class="text-gray-500 text-center py-4 theme-transition">加载中...</p>';
+                        
+                        // 加载对应用户的战绩记录
+                        loadUserRecordsForAdminPanel(userId, username);
                     });
                     
                     // 修改用户密码
@@ -1568,6 +1754,33 @@ function updateRemainingCount() {
                                 changePasswordContent.classList.remove('scale-95', 'opacity-0');
                                 changePasswordContent.classList.add('scale-100', 'opacity-100');
                             }, 10);
+                        });
+                    }
+                    
+                    // 提升为管理员
+                    if (user.get('role') !== 'admin') {
+                        const promoteBtn = userItem.querySelector('.promote-admin-btn');
+                        promoteBtn.addEventListener('click', async (e) => {
+                            e.stopPropagation();
+                            const userId = e.currentTarget.getAttribute('data-user-id');
+                            const username = e.currentTarget.getAttribute('data-username');
+                            
+                            if (!confirm(`确定要将用户 "${username}" 提升为管理员吗？`)) {
+                                return;
+                            }
+                            
+                            try {
+                                const userToPromote = AV.Object.createWithoutData('GameUser', userId);
+                                userToPromote.set('role', 'admin');
+                                await userToPromote.save();
+                                
+                                // 刷新用户列表
+                                loadAllUsers(searchTerm);
+                                showTempMessage(`用户 "${username}" 已成功提升为管理员`, 'success');
+                            } catch (error) {
+                                console.error('提升管理员失败:', error);
+                                alert(`操作失败：${error.message || '网络异常'}`);
+                            }
                         });
                     }
                     
@@ -1614,6 +1827,44 @@ function updateRemainingCount() {
             }
         }
         
+        // 新增函数：专门为管理员面板加载用户战绩
+        async function loadUserRecordsForAdminPanel(userId, username = '') {
+            try {
+                const query = new AV.Query(GameRecord);
+                query.equalTo('user', AV.Object.createWithoutData('GameUser', userId));
+                query.descending('date');
+                query.limit(10);
+                const records = await query.find();
+                
+                if (records.length === 0) {
+                    userRecords.innerHTML = `<p class="text-gray-500 text-center py-4 theme-transition">${username || '该用户'}暂无游戏记录</p>`;
+                    return;
+                }
+                
+                userRecords.innerHTML = '';
+                records.forEach(record => {
+                    const item = document.createElement('div');
+                    item.className = 'record-item theme-transition';
+                    
+                    const date = new Date(record.get('date'));
+                    const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                    
+                    item.innerHTML = `
+                        <div class="record-date theme-transition">${formattedDate} · ${record.get('difficulty') === 'normal' ? '普通模式' : '困难模式'}</div>
+                        <div class="record-stats">
+                            <span>猜测次数: ${record.get('guessCount')}</span>
+                            <span class="${record.get('isSuccess') ? 'record-success' : 'record-fail'}">${record.get('isSuccess') ? '成功' : '失败'}</span>
+                        </div>
+                    `;
+                    
+                    userRecords.appendChild(item);
+                });
+            } catch (error) {
+                console.error('加载用户战绩失败:', error);
+                userRecords.innerHTML = '<p class="text-red-500 text-center py-4 theme-transition">加载战绩失败</p>';
+            }
+        }
+        
         // 工具函数：清除认证错误信息
         function clearAuthErrors() {
             loginError.textContent = '';
@@ -1637,6 +1888,60 @@ function updateRemainingCount() {
             }
         }
         
+        // 工具函数：显示自身密码错误
+        function showSelfPasswordError(message) {
+            selfPasswordError.textContent = message;
+            selfPasswordError.classList.remove('hidden');
+            
+            // 3秒后自动隐藏错误消息
+            setTimeout(() => {
+                selfPasswordError.textContent = '';
+                selfPasswordError.classList.add('hidden');
+            }, 3000);
+        }
+        
+        // 工具函数：显示添加管理员错误
+        function showAddAdminError(message) {
+            addAdminError.textContent = message;
+            addAdminError.classList.remove('hidden');
+            addAdminSuccess.textContent = '';
+            addAdminSuccess.classList.add('hidden');
+            
+            // 3秒后自动隐藏错误消息
+            setTimeout(() => {
+                addAdminError.textContent = '';
+                addAdminError.classList.add('hidden');
+            }, 3000);
+        }
+        
+        // 工具函数：显示临时消息
+        function showTempMessage(message, type = 'info') {
+            // 创建一个临时提示元素
+            const tempMsg = document.createElement('div');
+            tempMsg.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 ${
+                type === 'success' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'
+            }`;
+            tempMsg.textContent = message;
+            tempMsg.style.transform = 'translateX(100%)';
+            
+            document.body.appendChild(tempMsg);
+            
+            // 显示动画
+            setTimeout(() => {
+                tempMsg.style.transform = 'translateX(0)';
+            }, 10);
+            
+            // 3秒后隐藏并移除
+            setTimeout(() => {
+                tempMsg.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (tempMsg.parentNode) {
+                        tempMsg.parentNode.removeChild(tempMsg);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
         // 工具函数：防抖
         function debounce(func, wait) {
             let timeout;
@@ -1657,16 +1962,17 @@ function updateRemainingCount() {
             usernameDisplay.textContent = currentUser.username;
             
             // 如果是管理员，显示管理员按钮
-           // 统一、容错的管理员判断
-  if (currentUser && currentUser.role && currentUser.role.toLowerCase() === 'admin') {
-    adminBtn.classList.remove('hidden'); // 显示齿轮按钮
-    loadAllUsers();
-    console.log('页面加载：管理员已登录，显示按钮');
-  } else {
-    adminBtn.classList.add('hidden');
-    console.log('页面加载：非管理员，隐藏按钮');
-  }
-}
+            if (currentUser && currentUser.role && currentUser.role.toLowerCase() === 'admin') {
+                adminBtn.classList.remove('hidden');
+                loadAllUsers();
+                console.log('页面加载：管理员已登录，显示按钮');
+            } else {
+                adminBtn.classList.add('hidden');
+                console.log('页面加载：非管理员，隐藏按钮');
+            }
+            
+            initGame();
+        }
         
         // 检查主题设置
         const savedTheme = localStorage.getItem('darkMode');
