@@ -65,6 +65,212 @@
   </style>
   
   <style>
+
+/* 精准选中管理员页面用户列表的用户名文字 */
+.dark-theme #user-list .flex.items-center.gap-2 > span,
+.dark-theme #user-list .flex.items-center.gap-2 > span > span, /* 包含用户名和标签的外层span */
+.dark-theme #user-list .text-xs.bg-primary\/10, /* 管理员标签 */
+.dark-theme #user-list .text-xs.bg-gray-100 { /* 普通用户标签 */
+  color: #ffffff !important; /* 强制白色 */
+  opacity: 1 !important; /* 完全不透明，确保清晰可见 */
+}
+
+/* 修复用户列表项背景与文字对比度 */
+.dark-theme #user-list .flex.justify-between.items-center {
+  background-color: rgba(55, 65, 81, 0.6) !important; /* 加深背景，凸显白色文字 */
+}
+
+/* 管理员页面 - 用户列表用户名白色适配 */
+.dark-theme #user-list .user-item span,
+.dark-theme #user-list .flex items-center gap-2 span,
+.dark-theme #user-list .text-xs, /* 管理员/普通用户标签文字 */
+.dark-theme #current-user-records-title, /* 战绩标题 */
+.dark-theme #user-records .record-stats span, /* 战绩列表文字 */
+.dark-theme #search-user::placeholder, /* 搜索框占位符 */
+.dark-theme #admin-self-password::placeholder, /* 管理员改密码输入框 */
+.dark-theme #add-admin-username::placeholder { /* 添加管理员输入框 */
+  color: #ffffff !important;
+  opacity: 0.95 !important;
+}
+
+/* 管理员页面标签背景提亮（配合白色文字） */
+.dark-theme #user-list .text-xs.bg-primary\/10,
+.dark-theme #user-list .text-xs.bg-gray-100 {
+  background-color: rgba(165, 180, 252, 0.2) !important; /* 管理员标签背景提亮 */
+  color: #ffffff !important; /* 标签文字白色 */
+}
+
+/* 深色模式适配：全部字体+图形改为白色/亮色 */
+.dark-theme .text-gray-700,
+.dark-theme .text-gray-600,
+.dark-theme .text-gray-500,
+.dark-theme .text-gray-400,
+.dark-theme .text-neutral, /* 中性色文字改为白色 */
+.dark-theme .footer-text,
+.dark-theme .record-date,
+.dark-theme .record-stats,
+.dark-theme h1, .dark-theme h2, .dark-theme h3, .dark-theme h4, .dark-theme h5, .dark-theme h6,
+.dark-theme button span,
+.dark-theme input::placeholder,
+.dark-theme input, /* 输入框文字 */
+.dark-theme .difficulty-text,
+.dark-theme .result-message,
+.dark-theme #username-display,
+.dark-theme .auth-form p,
+.dark-theme #current-user-records-title,
+.dark-theme #search-user::placeholder {
+  color: #ffffff !important; /* 所有文字统一为白色 */
+  opacity: 0.95 !important; /* 适当提高不透明度，避免过暗 */
+}
+
+/* 图标（FontAwesome）统一改为白色亮色 */
+.dark-theme .fa,
+.dark-theme .fa-user,
+.dark-theme .fa-sign-in,
+.dark-theme .fa-user-plus,
+.dark-theme .fa-key,
+.dark-theme .fa-cog,
+.dark-theme .fa-bar-chart,
+.dark-theme .fa-moon-o,
+.dark-theme .fa-sun-o,
+.dark-theme .fa-question-circle,
+.dark-theme .fa-sign-out,
+.dark-theme .fa-times,
+.dark-theme .fa-search,
+.dark-theme .fa-refresh,
+.dark-theme .fa-list-ul,
+.dark-theme .fa-check-circle,
+.dark-theme .fa-trophy,
+.dark-theme .fa-times-circle,
+.dark-theme .fa-trash-o,
+.dark-theme .fa-history,
+.dark-theme .fa-star,
+.dark-theme .fa-clock-o,
+.dark-theme .fa-signal {
+  color: #ffffff !important; /* 所有图标统一为白色 */
+  opacity: 0.95 !important;
+}
+
+/* 特殊状态文字保留原有颜色（但提亮） */
+.dark-theme .record-success {
+  color: #34d399 !important; /* 胜利绿色提亮 */
+}
+.dark-theme .record-fail {
+  color: #f87171 !important; /* 失败红色提亮 */
+}
+.dark-theme .text-red-500 {
+  color: #fca5a5 !important; /* 错误提示红色提亮 */
+}
+.dark-theme .text-green-500 {
+  color: #4ade80 !important; /* 成功提示绿色提亮 */
+}
+.dark-theme .text-primary {
+  color: #a5b4fc !important; /* 主色调提亮（原#6366F1） */
+}
+.dark-theme .text-secondary {
+  color: #f9a8d4 !important; /* 辅助色提亮（原#EC4899） */
+}
+
+/* 输入框、边框等元素提亮，适配白色文字 */
+.dark-theme .border-gray-200 {
+  border-color: #4b5563 !important; /* 边框提亮 */
+}
+.dark-theme input {
+  background-color: rgba(55, 65, 81, 0.6) !important; /* 输入框背景加深，凸显白色文字 */
+  border-color: #6b7280 !important;
+}
+.dark-theme input:focus {
+  box-shadow: 0 0 0 3px rgba(165, 180, 252, 0.4) !important; /* 聚焦边框提亮 */
+}
+
+/* 猜测历史项文字颜色（深色模式下白色） */
+.dark-theme #guess-history span {
+  color: #ffffff !important;
+  background-color: rgba(75, 85, 99, 0.5) !important;
+}
+
+/* 1. 全局基础自适应（优先添加，作用于所有元素） */
+* {
+  box-sizing: border-box; /* 避免padding撑大元素 */
+  margin: 0;
+  padding: 0;
+}
+
+/* 2. 视口适配优化（确保meta标签已正确设置，原代码已包含，无需改动） */
+/* 原代码：<meta name="viewport" content="width=device-width, initial-scale=1.0"> */
+
+/* 3. 字体大小自适应（用vw单位，跟随屏幕宽度变化） */
+/* 替换原固定font-size，如14px→2.8vw，16px→3.2vw */
+body {
+  font-size: clamp(14px, 3vw, 18px) !important; /* 最小14px，最大18px，按屏幕3%自适应 */
+}
+
+/* 标题文字自适应 */
+h1, .header-title {
+  font-size: clamp(1.5rem, 6vw, 2.2rem) !important; /* 标题更大，适配屏幕 */
+}
+h2, h3, .text-lg {
+  font-size: clamp(1.1rem, 4.5vw, 1.6rem) !important;
+}
+h4, h5 {
+  font-size: clamp(1rem, 3.8vw, 1.3rem) !important;
+}
+
+/* 按钮、小文字自适应 */
+button span, .btn-text {
+  font-size: clamp(0.9rem, 3.5vw, 1.1rem) !important;
+}
+.text-sm, .record-date, .footer-text, input::placeholder {
+  font-size: clamp(0.8rem, 3vw, 1rem) !important;
+}
+
+/* 4. 图形/容器大小自适应（替换原固定px为vw或clamp） */
+/* 游戏卡片、弹窗等容器 */
+#game-card, #rules-card, .glass-effect, .glass-effect-dark, 
+#auth-modal .glass-effect, #records-modal .glass-effect, #success-modal .glass-effect {
+  max-width: 95vw !important; /* 最大宽度占屏幕95% */
+  padding: clamp(1rem, 5vw, 1.8rem) !important; /* 内边距自适应 */
+  margin: 0 auto !important;
+}
+
+/* 图标大小自适应 */
+.fa {
+  font-size: clamp(1rem, 3.5vw, 1.3rem) !important;
+}
+/* 圆形图标容器（如登录/胜利弹窗的图标区） */
+.w-16.h-16 {
+  width: clamp(4rem, 12vw, 5rem) !important;
+  height: clamp(4rem, 12vw, 5rem) !important;
+}
+
+/* 按钮大小自适应 */
+button {
+  padding: clamp(0.8rem, 3vw, 1.2rem) !important;
+  border-radius: clamp(0.5rem, 2vw, 0.8rem) !important;
+}
+/* 输入框自适应 */
+input {
+  padding: clamp(0.8rem, 3vw, 1.2rem) !important;
+  border-radius: clamp(0.5rem, 2vw, 0.8rem) !important;
+  font-size: clamp(0.9rem, 3.2vw, 1.1rem) !important;
+}
+
+/* 猜测历史项自适应 */
+#guess-history span {
+  padding: clamp(0.5rem, 2vw, 0.8rem) clamp(1rem, 3vw, 1.5rem) !important;
+  font-size: clamp(0.85rem, 3vw, 1rem) !important;
+  margin: 0.2rem !important;
+}
+
+/* 管理员面板元素自适应 */
+#admin-panel .glass-effect {
+  max-width: 95vw !important;
+  max-height: 85vh !important;
+  padding: clamp(1rem, 4vw, 1.5rem) !important;
+}
+#user-list, #user-records, #records-list {
+  max-height: clamp(10rem, 30vw, 15rem) !important;
+}
 /* 战绩记录样式调整 */
 #user-records {
   padding: 1rem;
@@ -498,7 +704,7 @@
     <div class="container mx-auto flex justify-between items-center">
       <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-primary flex items-center header-title theme-transition">
         <i class="fa fa-gamepad mr-2 text-secondary animate-bounce-slow"></i>
-        <span>数字猜猜乐</span>
+        <span></span>
       </h1>
       <div class="flex items-center gap-3">
         <span class="bg-primary/10 text-primary px-4 py-1 rounded-full text-sm font-medium theme-transition">
@@ -636,9 +842,9 @@
   <!-- 页脚 -->
   <footer class="w-full py-6 px-4 glass-effect mt-8 relative z-20 theme-transition" id="footer" style="display: none;">
     <div class="container mx-auto text-center text-gray-500 text-sm footer-text theme-transition">
-      <p>© 2025 数字猜猜乐 | 简约版</p>
+      <p>© 2025 数字猜猜乐</p>
       <p class="mt-1">
-        日夜模式随心切换
+        问题反馈微信:xswllcx
       </p>
     </div>
   </footer>
