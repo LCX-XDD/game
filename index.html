@@ -1993,58 +1993,40 @@ ${user.get('role') !== 'admin' ? `
                     // 删除用户
                     const deleteBtn = userItem.querySelector('.delete-user-btn');
                     if (!isCurrentUser) {
-                        // 找到删除用户的事件监听代码（约第1550行左右），替换为：
-deleteBtn.addEventListener('click', async (e) => {
-    e.stopPropagation();
-    const userId = e.currentTarget.getAttribute('data-user-id');
-    const username = e.currentTarget.getAttribute('data-username');
-    
-    if (!confirm(`确定要删除用户 "${username}" 吗？此操作将同时删除该用户的所有游戏记录！`)) {
-        return;
-    }
-    
-    try {
-        // 1. 先检查当前用户是否为管理员（双重验证）
-        if (currentUser?.role !== 'admin') {
-            alert('无权限执行此操作！');
-            return;
-        }
-        
-        // 2. 先删除用户的所有游戏记录（确保异步完成）
-        const recordQuery = new AV.Query(GameRecord);
-        recordQuery.equalTo('user', AV.Object.createWithoutData('GameUser', userId));
-        const records = await recordQuery.find();
-        
-        if (records.length > 0) {
-            await AV.Object.destroyAll(records); // 等待记录删除完成
-        }
-        
-        // 3. 再删除用户（必须用 AV.User 类删除，而非 AV.Object）
-        const userToDelete = AV.Object.createWithoutData('GameUser', userId);
-        // 关键修复：添加权限头（如果 LeanCloud 开启了权限控制）
-        const deleteResult = await userToDelete.destroy({
-            headers: {
-                'X-LC-Session': AV.User.current()?._sessionToken // 传递管理员会话令牌
-            }
-        });
-        
-        // 4. 刷新列表（确保DOM操作在删除成功后）
-        loadAllUsers(searchTerm);
-        userRecords.innerHTML = '<p class="text-gray-500 text-center py-4 theme-transition">请选择一个用户查看战绩</p>';
-        
-        alert(`用户 "${username}" 已成功删除`);
-    } catch (error) {
-        console.error('删除用户失败:', error.response || error.message);
-        // 错误提示优化：显示具体原因
-        if (error.response?.status === 403) {
-            alert('删除失败：权限不足，请检查 LeanCloud 数据权限配置');
-        } else if (error.response?.status === 404) {
-            alert('删除失败：用户不存在');
-        } else {
-            alert(`删除失败：${error.message || '网络异常，请重试'}`);
-        }
-    }
-});
+                        deleteBtn.addEventListener('click', async (e) => {
+                            e.stopPropagation();
+                            const userId = e.currentTarget.getAttribute('data-user-id');
+                            const username = e.currentTarget.getAttribute('data-username');
+                            
+                            if (!confirm(`确定要删除用户 "${username}" 吗？此操作将同时删除该用户的所有游戏记录！`)) {
+                                return;
+                            }
+                            
+                            try {
+                                // 先删除用户的所有游戏记录
+                                const recordQuery = new AV.Query(GameRecord);
+                                recordQuery.equalTo('user', AV.Object.createWithoutData('GameUser', userId));
+                                const records = await recordQuery.find();
+                                if (records.length > 0) {
+                                    await AV.Object.destroyAll(records);
+                                }
+                                
+                                // 再删除用户
+                                const userToDelete = AV.Object.createWithoutData('GameUser', userId);
+                                await userToDelete.destroy();
+                                
+                                // 刷新用户列表
+                                loadAllUsers(searchTerm);
+                                userRecords.innerHTML = '<p class="text-gray-500 text-center py-4 theme-transition">请选择一个用户查看战绩</p>';
+                                
+                                alert(`用户 "${username}" 已成功删除`);
+                            } catch (error) {
+                                console.error('删除用户失败:', error);
+                                alert(`删除失败：${error.message || '网络异常'}`);
+                            }
+                        });
+                    }
+                });
             } catch (error) {
                 console.error('加载用户失败:', error);
                 userList.innerHTML = '<p class="text-red-500 text-center py-4 theme-transition">加载用户失败</p>';
